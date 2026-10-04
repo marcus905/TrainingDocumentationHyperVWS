@@ -8,6 +8,16 @@ The Windows Server ISO exists on the physical workstation, but Day 2 needs that 
 
 Copy the Windows Server ISO from the physical host into HV01 for Day 2.
 
+## Concepts to keep in mind
+
+`Copy-VMFile` transfers files through the Hyper-V Guest Service Interface, avoiding the need to configure a temporary SMB share just for course media.
+
+## What you will do
+
+Enable Guest Service Interface on HV01, copy the ISO from the physical host, and compare source/destination SHA-256 hashes.
+
+## Hands-on / detailed content
+
 On the physical Windows 11 host:
 
 ~~~powershell
@@ -24,25 +34,13 @@ Get-FileHash "D:\Hyper-V\ISO\WS2025-EVAL-x64-EN.iso" -Algorithm SHA256
 
 Compare the hash with the source ISO.
 
-## Concepts to keep in mind
-
-`Copy-VMFile` transfers files through the Hyper-V Guest Service Interface, avoiding the need to configure a temporary SMB share just for course media.
-
-
-## What you will do
-
-Enable Guest Service Interface on HV01, copy the ISO from the physical host, and compare source/destination SHA-256 hashes.
-
-
 ## What you should observe
 
 The ISO should appear inside HV01 at D:\Hyper-V\ISO and its hash should remain identical to the physical-host copy.
 
-
 ## Validation checkpoint
 
 Verify integration service state, file presence, file size, and SHA-256 equality.
-
 
 ## Expected end state
 
