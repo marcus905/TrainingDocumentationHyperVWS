@@ -22,7 +22,7 @@ By the end of Day 1, students should be able to:
 
 PowerShell will be used throughout the course to inspect, configure and troubleshoot Windows Server and Hyper-V.
 
-The goal of this module is not to teach PowerShell scripting in depth. Students only need a practical foundation that will make the later labs easier to follow.
+The goal is not to teach PowerShell scripting in depth. This primer covers only the concepts and habits used repeatedly in the labs.
 
 By the end of this section, students should be comfortable with:
 
@@ -42,22 +42,9 @@ By the end of this section, students should be comfortable with:
 
 Windows PowerShell and PowerShell are separate products.
 
-**Windows PowerShell 5.1**
+**Windows PowerShell 5.1** ships with Windows, uses the full .NET Framework, runs only on Windows, and is launched with powershell.exe. It remains important because some Windows Server management modules were designed for it.
 
-- ships with Windows;
-- runs on the full .NET Framework;
-- is Windows-only;
-- is launched with powershell.exe;
-- remains important for some Windows Server management modules.
-
-**PowerShell 7**
-
-- is installed separately;
-- runs side-by-side with Windows PowerShell 5.1;
-- is based on modern .NET;
-- is cross-platform;
-- is launched with pwsh.exe;
-- can use many Windows PowerShell modules directly, while other modules may require Windows PowerShell Compatibility.
+**PowerShell 7** is installed separately, runs side-by-side with Windows PowerShell 5.1, uses modern .NET, is cross-platform, and is launched with pwsh.exe. Many Windows management modules work directly in PowerShell 7; others may use Windows PowerShell Compatibility.
 
 For this course, use **Windows PowerShell 5.1 by default unless the instructor explicitly asks you to use PowerShell 7**.
 
@@ -189,7 +176,7 @@ Show detailed help:
 Get-Help Get-NetAdapter -Detailed
 ~~~
 
-If help content is incomplete, administrative systems can update it with:
+If local help content is incomplete, update it with:
 
 ~~~powershell
 Update-Help
@@ -207,7 +194,7 @@ Run:
 Get-Service
 ~~~
 
-PowerShell does not simply return formatted text. It returns service objects with properties.
+PowerShell returns service objects, not just formatted text.
 
 Inspect one service:
 
@@ -219,7 +206,7 @@ This exposes properties that can be filtered, sorted and selected.
 
 ### Why this matters
 
-Later in the course, commands such as Get-VM, Get-NetAdapter and Get-Disk return objects representing real system resources.
+Later, Get-VM, Get-NetAdapter and Get-Disk use the same object model, which lets us filter and select properties consistently.
 
 ---
 
@@ -278,38 +265,30 @@ Get-NetRoute |
 
 ---
 
-## Select-Object
+## Filtering and selecting properties
 
-Select only the properties you need:
+Use Select-Object to keep only the properties you need:
 
 ~~~powershell
 Get-NetAdapter |
     Select-Object Name,Status,LinkSpeed,MacAddress
 ~~~
 
-This is useful when a command returns much more information than is relevant to the current task.
-
----
-
-## Where-Object
-
-Filter objects:
+Use Where-Object to keep only objects that match a condition:
 
 ~~~powershell
 Get-Service |
     Where-Object Status -eq "Stopped"
 ~~~
 
-A more explicit form is:
+For more complex conditions, use the script-block form:
 
 ~~~powershell
 Get-Service |
     Where-Object { $_.Status -eq "Stopped" }
 ~~~
 
-The shorter syntax is sufficient for simple property comparisons.
-
-The $_ variable in the script-block syntax represents the current object passing through the pipeline.
+In that form, $_ represents the current object moving through the pipeline.
 
 ---
 
@@ -918,7 +897,7 @@ The exact behavior of public ICMP tests can be affected by upstream firewalls, s
 
 Windows Server uses roles and features to add operating-system capabilities.
 
-Microsoft supports managing them through both Server Manager and PowerShell. Get-WindowsFeature lists roles and features, while Install-WindowsFeature installs them. Management tools are not automatically added for every role unless requested with the appropriate option. citeturn697734search0turn697734search1
+Windows Server roles and features can be managed through both Server Manager and PowerShell. Get-WindowsFeature lists them, while Install-WindowsFeature installs them. Some server roles also expose options for installing their management tools.
 
 ## Step 1 — List available roles and features
 
@@ -952,11 +931,9 @@ Alternative syntax:
 Get-WindowsFeature | Where-Object InstallState -eq "Installed"
 ~~~
 
-### Teaching point
+### Apply the primer
 
-The pipeline sends objects returned by Get-WindowsFeature to Where-Object for filtering.
-
-Students should understand that this is object-based processing rather than text parsing.
+This is the same object-and-pipeline pattern used earlier: Get-WindowsFeature returns objects and Where-Object filters them by property.
 
 ---
 
@@ -972,19 +949,15 @@ This demonstrates wildcard filtering.
 
 ---
 
-## Step 4 — Preview a change
+## Step 4 — Preview the installation
 
-Use WhatIf before performing the installation:
+Apply the WhatIf safety pattern introduced in the PowerShell primer:
 
 ~~~powershell
 Install-WindowsFeature Telnet-Client -WhatIf
 ~~~
 
-### Why use WhatIf?
-
-WhatIf shows the intended action without applying the change.
-
-It is a useful habit when learning administrative PowerShell commands.
+Confirm that the preview describes the expected feature change before running the real installation.
 
 ---
 
@@ -1122,12 +1095,9 @@ Get-NetIPConfiguration -InterfaceAlias "Ethernet"
 New-NetIPAddress -InterfaceAlias "Ethernet" -IPAddress 10.10.10.11 -PrefixLength 24 -DefaultGateway 10.10.10.1
 ~~~
 
-### Parameter explanation
+### Read the command before running it
 
-- InterfaceAlias selects the network adapter.
-- IPAddress defines the static address.
-- PrefixLength defines the subnet.
-- DefaultGateway creates the default route.
+Confirm that InterfaceAlias targets the intended adapter and that IPAddress, PrefixLength and DefaultGateway match the instructor-provided addressing plan.
 
 ### Important remote-lab warning
 
@@ -1248,11 +1218,9 @@ For the examples below, assume the training disk is **Disk 1**.
 Initialize-Disk -Number 1 -PartitionStyle GPT
 ~~~
 
-### What this does
+### Expected effect
 
-Initialize-Disk prepares a raw disk with a partition table.
-
-GPT is used for the training disk.
+The raw training disk is initialized with a GPT partition table.
 
 Verify:
 
@@ -1270,11 +1238,9 @@ PartitionStyle should now report GPT.
 New-Partition -DiskNumber 1 -UseMaximumSize -DriveLetter D
 ~~~
 
-### What this does
+### Expected effect
 
-- DiskNumber selects the disk.
-- UseMaximumSize allocates the available space.
-- DriveLetter assigns D:.
+One partition consumes the available training disk space and is assigned drive letter D:.
 
 Verify:
 
@@ -1290,9 +1256,9 @@ Get-Partition -DiskNumber 1
 Format-Volume -DriveLetter D -FileSystem NTFS -NewFileSystemLabel "HyperVData" -Confirm:$false
 ~~~
 
-### What this does
+### Expected effect
 
-Creates an NTFS filesystem and labels the volume HyperVData.
+The D: volume is formatted as NTFS and labeled HyperVData.
 
 Verify:
 
@@ -1431,8 +1397,8 @@ Students should be able to answer:
 5. What is the difference between Test-NetConnection and Resolve-DnsName?
 6. Why should a disk number always be verified before Initialize-Disk?
 7. What is the difference between a disk, partition and volume?
-8. Why use WhatIf before certain administrative commands?
-9. What does the PowerShell pipeline do in Get-WindowsFeature | Where-Object Installed?
+8. How does the WhatIf pattern reduce risk before a configuration change?
+9. How does Get-WindowsFeature | Where-Object Installed reuse the object-and-pipeline model from the primer?
 10. Why is consistent folder structure useful in server administration?
 
 ---
