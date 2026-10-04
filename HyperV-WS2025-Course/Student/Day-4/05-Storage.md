@@ -1,5 +1,14 @@
 # Module 05 — Storage Break/Fix
 
+
+## Concepts to keep in mind
+
+A checkpoint redirects guest writes into an AVHDX differencing layer. That can increase storage consumption and I/O complexity without the base VHDX itself being 'broken.'
+
+## Introduction
+
+Storage symptoms often cross several layers: guest file activity, VHDX/AVHDX chains, host free space, and the physical storage underneath the nested lab. This incident gives you a controlled way to trace that chain.
+
 ## Break
 
 On HV01:
@@ -47,3 +56,23 @@ Remove-Item "C:\LabIO" -Recurse -Force
 ~~~
 
 Wait for merge completion before the next storage exercise.
+
+
+## What you will do
+
+Create the temporary checkpoint, generate controlled guest writes, inspect free capacity, VM disk paths, checkpoint state, and latency, then remove the checkpoint and generated data.
+
+
+## What you should observe
+
+The checkpoint should create AVHDX activity and the controlled writes should change file sizes/timestamps while SRV01 remains online.
+
+
+## Validation checkpoint
+
+Explain whether the evidence points to guest workload, checkpoint chain, host capacity, or underlying storage and what additional evidence would distinguish them.
+
+
+## Expected end state
+
+The temporary checkpoint is removed, merge completes, generated files are deleted, and storage returns to the known baseline.
