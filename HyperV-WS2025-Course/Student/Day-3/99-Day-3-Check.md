@@ -20,26 +20,21 @@ Day 3 adds the most dependencies of the course so far: a second Hyper-V host, ce
 - [ ] Replica break/fix completed.
 - [ ] Environment returned to baseline.
 
-
 ## Concepts to keep in mind
 
 A reliable troubleshooting day needs a reliable starting state. Replica health, no leftover checkpoints, known switch mappings, and a completed recovery test are all part of that baseline.
-
 
 ## What you will do
 
 Review each validation item and repair any incomplete Replica, storage, checkpoint, or recovery-test state before ending the day.
 
-
 ## What you should observe
 
 A healthy environment should have normal SRV01 operation on HV01, healthy Replica to HV02, no temporary failover artifacts, and documented baseline performance observations.
 
-
 ## Validation checkpoint
 
 Confirm there are no unintended checkpoints/test VMs and that `Get-VMReplication` reports the expected healthy relationship.
-
 
 ## Expected end state
 
