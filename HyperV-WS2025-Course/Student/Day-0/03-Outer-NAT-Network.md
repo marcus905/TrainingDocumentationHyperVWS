@@ -49,3 +49,8 @@ Confirm switch type, host-side IPv4 address, and CourseNAT prefix before creatin
 ## Expected end state
 
 The physical host provides a stable outer management network for both Windows Server VMs.
+
+
+## What you will do
+
+Inspect existing switches/NAT objects first, then create vSW-Course, assign 192.168.240.1/24 to its host-side adapter, create CourseNAT, and validate each object.
