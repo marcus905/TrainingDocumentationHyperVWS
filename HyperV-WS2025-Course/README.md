@@ -21,6 +21,14 @@ Working documentation for a five-day remote course focused on Windows Server 202
 - [04 - Day 4 - Structured Troubleshooting](04-Day-4-Troubleshooting.md)
 - [05 - Day 5 - Advanced Scenarios, Migration and Best Practices](05-Day-5-Advanced-Scenarios-Migration-Best-Practices.md)
 - [Instructor Guide](Instructor-Guide.md)
+- [Student bite-sized modules](Student/README.md)
+
+## Delivery layers
+
+- Root Day 0–5 files: canonical full technical guides.
+- `Student/`: bite-sized student-facing modules for live delivery and revision.
+- `Instructor-Guide.md`: instructor-only delivery notes and troubleshooting guidance.
+- Future slide decks should map to the numbered `Student/Day-X/` modules.
 
 ## Lab topology
 ~~~text
