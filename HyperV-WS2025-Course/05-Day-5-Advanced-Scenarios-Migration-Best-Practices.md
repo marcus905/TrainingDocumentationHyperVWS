@@ -941,6 +941,141 @@ Final environment status:
 
 ---
 
+# Collective capstone debrief
+
+After the individual capstone work, the class should perform a short collective review.
+
+Each student should briefly present one incident using the same structure:
+
+~~~text
+Symptom:
+Scope:
+Evidence:
+Root cause:
+Correction:
+Validation:
+Prevention:
+~~~
+
+## Discussion prompts
+
+For each presented incident, discuss:
+
+- What evidence proved the root cause?
+- Which hypothesis was rejected, and why?
+- Was there a contributing factor?
+- Was the corrective action the smallest safe change?
+- What validation proved service was restored?
+- What operational control could prevent recurrence?
+- What should be documented for the next administrator?
+
+## Instructor objective
+
+The goal of the debrief is not to compare who solved the incident fastest.
+
+The goal is to compare troubleshooting reasoning and show that different symptoms can require different evidence even when the final technical fix is simple.
+
+---
+
+# Course wrap-up — How the environment evolved
+
+The course environment was intentionally built and operated progressively.
+
+~~~text
+Day 1
+Build and validate Windows Server
+        |
+Day 2
+Install Hyper-V and create the virtual platform
+        |
+Day 3
+Add recovery, Replica, storage and performance concepts
+        |
+Day 4
+Break, diagnose and recover the environment
+        |
+Day 5
+Operate, migrate, secure, standardize and document it
+~~~
+
+## Day 1 — Establish the server foundation
+
+Students:
+
+- validated Windows Server 2025;
+- learned the PowerShell basics used throughout the week;
+- configured networking;
+- prepared storage;
+- verified roles, services and administration tools.
+
+## Day 2 — Build the Hyper-V platform
+
+Students:
+
+- installed Hyper-V;
+- configured host defaults;
+- created virtual networking;
+- created and configured VMs;
+- worked with CPU, memory, VHDX and VM lifecycle operations.
+
+## Day 3 — Add resilience and performance awareness
+
+Students:
+
+- used checkpoints correctly;
+- separated checkpoints, backup, Replica and HA concepts;
+- configured Hyper-V Replica;
+- performed recovery testing;
+- explored storage architectures;
+- built performance baselines.
+
+## Day 4 — Troubleshoot using evidence
+
+Students:
+
+- created controlled faults;
+- diagnosed CPU, memory, storage, network and management problems;
+- used event logs and performance counters;
+- produced root-cause reports;
+- completed a multi-fault incident drill.
+
+## Day 5 — Operate the environment as a system
+
+Students:
+
+- handled multi-layer incidents;
+- assessed migration requirements;
+- standardized configuration and documentation;
+- reviewed security and hardening;
+- completed the final capstone;
+- demonstrated operational ownership of the lab.
+
+## Final perspective
+
+The main course objective is not to memorize Hyper-V commands.
+
+Students should leave able to:
+
+~~~text
+Understand the architecture
+        |
+Build the platform
+        |
+Validate it
+        |
+Measure it
+        |
+Break it safely
+        |
+Troubleshoot it
+        |
+Recover it
+        |
+Operate it consistently
+~~~
+
+---
+
 # Day 5 review questions
 
 1. Why should multi-layer incidents be prioritized by impact and risk?
@@ -978,6 +1113,7 @@ Final environment status:
 - [ ] Operational readiness checklist completed.
 - [ ] Three-fault capstone completed.
 - [ ] Final operational report delivered.
+- [ ] Collective capstone debrief completed.
 - [ ] Student can explain how the Day 1–5 environment evolved.
 
 ---
