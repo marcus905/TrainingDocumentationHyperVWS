@@ -8,6 +8,16 @@ Day 4 taught a repeatable incident method. Day 5 extends it to situations where 
 
 Apply the Day 4 method across several infrastructure layers.
 
+## Concepts to keep in mind
+
+A symptom can originate in the application, guest OS, virtual hardware, Hyper-V configuration, host, storage/network stack, outer infrastructure, or an external dependency. Correlation across layers is more useful than checking every tool in sequence.
+
+## What you will do
+
+Use the layer-isolation questions to work through several example symptoms and decide which evidence would rule layers in or out before any change.
+
+## Hands-on / detailed content
+
 ~~~text
 Application
    |
@@ -35,11 +45,6 @@ Ask:
 - local VM storage or shared host storage?
 - what changed recently?
 
-
-## Concepts to keep in mind
-
-A symptom can originate in the application, guest OS, virtual hardware, Hyper-V configuration, host, storage/network stack, outer infrastructure, or an external dependency. Correlation across layers is more useful than checking every tool in sequence.
-
 ## Prioritization
 
 Typical order:
@@ -53,21 +58,13 @@ Typical order:
 
 Do not optimize a low-risk issue while a higher-risk failure remains unresolved.
 
-
-## What you will do
-
-Use the layer-isolation questions to work through several example symptoms and decide which evidence would rule layers in or out before any change.
-
-
 ## What you should observe
 
 Some evidence narrows scope rather than proving root cause. For example, 'only one VM is affected' reduces the likelihood of a host-wide outage but does not identify the failed component by itself.
 
-
 ## Validation checkpoint
 
 Given a multi-symptom incident, rank the issues by data-loss risk, outage, degraded resilience, performance, and warning-only impact.
-
 
 ## Expected end state
 
