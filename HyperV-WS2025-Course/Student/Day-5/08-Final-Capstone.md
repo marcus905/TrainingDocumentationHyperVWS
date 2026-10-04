@@ -1,5 +1,9 @@
 # Module 08 — Final Capstone
 
+## Introduction
+
+The final capstone simulates taking ownership of an environment with several simultaneous problems. You will create the assigned faults locally, then set the break instructions aside and operate as if another administrator handed you only the symptoms.
+
 ## Goal
 
 Diagnose three locally created faults with limited instructor guidance.
@@ -24,6 +28,11 @@ Disable the HV02 HTTPS Replica firewall rule.
 ### F — Missing VM storage dependency
 Create CAPBROKEN01 with a valid attached VHDX, move the VHDX, then attempt VM start.
 
+
+## Concepts to keep in mind
+
+Multiple symptoms may have independent root causes. Prioritize by operational risk, separate problem statements, avoid broad changes, and prove every correction with post-change validation.
+
 ## Mission
 
 1. Apply only assigned break recipes.
@@ -46,3 +55,23 @@ For each incident provide symptom, scope, impact, evidence, hypotheses, root cau
 Also include migration considerations, security observations and operational-standardization recommendations.
 
 Use the canonical Day 5 guide for the exact break/reset commands.
+
+
+## What you will do
+
+Apply the three assigned fault codes, inventory the environment, write separate problem statements, prioritize, gather evidence, prove root causes, correct each issue, restore the baseline, and produce the final report.
+
+
+## What you should observe
+
+Fixing one fault may leave the others unchanged. That is useful evidence about scope and dependency rather than a sign that troubleshooting failed.
+
+
+## Validation checkpoint
+
+For each incident, be prepared to defend the evidence, rejected hypotheses, root cause, smallest safe correction, validation, and preventive recommendation.
+
+
+## Expected end state
+
+All assigned faults are removed, the environment is back at the expected baseline, and the final operational report demonstrates independent troubleshooting and operational ownership.
