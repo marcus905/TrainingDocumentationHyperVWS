@@ -48,3 +48,8 @@ Verify the ISO exists at the expected path and record its SHA-256 value before c
 ## Expected end state
 
 The physical host has a clean course workspace and a verified Windows Server installation source.
+
+
+## What you will do
+
+Create the standard course folder tree, place the Windows Server ISO in the expected location, and verify the ISO with SHA-256 before it is used to install any VM.
