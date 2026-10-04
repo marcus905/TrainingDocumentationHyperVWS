@@ -19,21 +19,17 @@ This checklist is the handoff from Windows Server fundamentals into Hyper-V. Eac
 
 A known-good baseline is part of troubleshooting. If tomorrow's Hyper-V lab fails, today's validated network, storage, media, and operating-system state give you something reliable to compare against.
 
-
 ## What you will do
 
 Review every checkbox and re-run the relevant validation command for anything uncertain.
-
 
 ## What you should observe
 
 A clean Day 1 environment has stable outer networking, an initialized D: volume, the complete Hyper-V folder tree, and the Windows Server ISO already inside HV01.
 
-
 ## Validation checkpoint
 
 Do not proceed until all validation items are complete and the DNS break/fix has been reset.
-
 
 ## Expected end state
 
