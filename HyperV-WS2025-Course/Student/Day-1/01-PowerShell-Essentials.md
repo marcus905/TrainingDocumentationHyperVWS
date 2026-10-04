@@ -8,16 +8,21 @@ PowerShell is used throughout the course as both an administration tool and a tr
 
 Learn only the PowerShell habits used throughout the course.
 
+## Concepts to keep in mind
+
+Focus on command discovery, object-based output, the pipeline, filtering, selecting properties, variables, help, elevation, and reading errors as evidence.
+
+## What you will do
+
+Run the discovery/help examples, build the sample pipeline, and explain what each stage does rather than copying it mechanically.
+
+## Hands-on / detailed content
+
 ~~~powershell
 $PSVersionTable | Select-Object PSVersion,PSEdition
 Get-Command *NetAdapter*
 Get-Help Get-NetAdapter -Examples
 ~~~
-
-
-## Concepts to keep in mind
-
-Focus on command discovery, object-based output, the pipeline, filtering, selecting properties, variables, help, elevation, and reading errors as evidence.
 
 ## Pipeline
 
@@ -35,17 +40,10 @@ Explain powershell.exe vs pwsh.exe, Verb-Noun naming, Get-Command, Get-Help, pip
 
 Notice that commands such as `Get-Service` return objects with properties that can be filtered and selected rather than only formatted text.
 
-
 ## Validation checkpoint
 
 Explain what each stage of a simple pipeline does and identify the current PowerShell edition.
 
-
 ## Expected end state
 
 You can discover an unfamiliar command, read its help, filter its output, and interpret a basic error without guessing.
-
-
-## What you will do
-
-Run the discovery/help examples, build the sample pipeline, and explain what each stage does rather than copying it mechanically.
