@@ -8,6 +8,16 @@ Several Hyper-V features can look similar because they involve copies of VM data
 
 Separate technologies that solve different recovery problems.
 
+## Concepts to keep in mind
+
+Checkpoint = short rollback, backup = independent recoverable copy/history, Replica = asynchronous DR copy, clustering = high availability. Export is a portability/recovery mechanism, not a complete backup strategy.
+
+## What you will do
+
+Export SRV01, inspect the resulting files, discuss import modes, and compare what would happen if the primary VM, host, or application data were lost.
+
+## Hands-on / detailed content
+
 | Technology | Primary purpose |
 |---|---|
 | Checkpoint | Short rollback |
@@ -16,11 +26,6 @@ Separate technologies that solve different recovery problems.
 | Failover Clustering | High availability |
 
 Replica is not backup because unwanted changes or corruption can also replicate.
-
-
-## Concepts to keep in mind
-
-Checkpoint = short rollback, backup = independent recoverable copy/history, Replica = asynchronous DR copy, clustering = high availability. Export is a portability/recovery mechanism, not a complete backup strategy.
 
 ## Export exercise
 
@@ -32,21 +37,13 @@ Get-ChildItem "D:\Hyper-V\Export" -Recurse
 
 Discuss import choices: register in place, restore, or copy/new ID. A successful export does not prove recoverability until recovery is tested.
 
-
-## What you will do
-
-Export SRV01, inspect the resulting files, discuss import modes, and compare what would happen if the primary VM, host, or application data were lost.
-
-
 ## What you should observe
 
 An export contains VM configuration and disks, but it does not by itself prove that recovery objectives, retention, or application consistency are met.
 
-
 ## Validation checkpoint
 
 Given a failure scenario, choose checkpoint, backup, Replica, or HA and justify why the other options are insufficient.
-
 
 ## Expected end state
 
