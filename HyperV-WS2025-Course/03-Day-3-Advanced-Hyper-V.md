@@ -662,9 +662,43 @@ HV01 certificate thumbprint: ______________________________
 HV02 certificate thumbprint: ______________________________
 ~~~
 
-Microsoft reference:
+## Step 9 — Disable certificate revocation checking for this isolated lab
+
+Hyper-V Replica performs certificate revocation checking.
+
+This lab-only CA does not publish a reachable CRL distribution point, so Microsoft documents the server-level DisableCertRevocationCheck value for this kind of isolated lab deployment.
+
+On **both HV01 and HV02**:
+
+~~~powershell
+$ReplicaRegPath = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Virtualization\Replication"
+
+New-Item -Path $ReplicaRegPath -Force | Out-Null
+
+New-ItemProperty -Path $ReplicaRegPath -Name "DisableCertRevocationCheck" -PropertyType DWord -Value 1 -Force
+~~~
+
+Verify:
+
+~~~powershell
+Get-ItemProperty -Path $ReplicaRegPath -Name "DisableCertRevocationCheck"
+~~~
+
+Expected value:
+
+~~~text
+DisableCertRevocationCheck : 1
+~~~
+
+> **Lab-only security note**
+>
+> Disabling certificate revocation checking weakens certificate validation. Use this only for the isolated training PKI created in this lab. Production environments should use certificates whose revocation infrastructure is available and should keep normal revocation validation enabled.
+
+Microsoft references:
 
 https://learn.microsoft.com/windows-server/virtualization/hyper-v/configure-replication-single-host
+
+https://learn.microsoft.com/troubleshoot/windows-server/virtualization/feature-performance-optimization-hyper-v-replica
 
 ---
 
@@ -1477,6 +1511,7 @@ Students should be able to answer:
 - [ ] HV02 vSW-Lab and LabNAT created.
 - [ ] Standalone-host Replica authentication model understood.
 - [ ] Lab root and HV01/HV02 Replica certificates created and imported.
+- [ ] Lab-only certificate revocation setting configured on HV01 and HV02.
 - [ ] HV02 enabled as Replica server.
 - [ ] Replica connectivity tested.
 - [ ] SRV01 initial replication completed.
