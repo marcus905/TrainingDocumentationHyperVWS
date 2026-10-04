@@ -8,10 +8,13 @@ HV01 and HV02 form the outer server layer for the whole week. HV01 becomes the m
 
 Create the two outer Windows Server VMs used throughout the course.
 
-
 ## Concepts to keep in mind
 
 The outer hosts use fixed memory for predictable nested-host behavior. Their 200 GB data disks are dynamically expanding files on the physical machine but will initially appear as raw disks inside Windows Server.
+
+## What you will do
+
+Create both Generation 2 outer VMs with the agreed CPU, static memory, OS/data disks, ISO attachment, and vSW-Course network adapter, then inspect the resulting virtual hardware.
 
 ## Specification
 
@@ -39,17 +42,10 @@ Get-VMDvdDrive HV01,HV02
 
 Each VM should show one OS disk, one data disk, one virtual DVD with the ISO, one vNIC on vSW-Course, four vCPUs, and static startup memory.
 
-
 ## Validation checkpoint
 
 Inspect VM, processor, hard-disk, DVD, and network-adapter configuration before starting installation.
 
-
 ## Expected end state
 
 HV01 and HV02 exist with matching outer architecture and are ready for Windows Server installation.
-
-
-## What you will do
-
-Create both Generation 2 outer VMs with the agreed CPU, static memory, OS/data disks, ISO attachment, and vSW-Course network adapter, then inspect the resulting virtual hardware.
