@@ -167,9 +167,66 @@ https://learn.microsoft.com/windows-server/virtualization/hyper-v/plan/should-i-
 
 # Module 4 — Install and validate the Hyper-V role
 
+Installing Hyper-V on Windows Server does more than add a management console. It enables the virtualization platform and adds the Windows components required to create and manage virtual machines.
+
 Microsoft reference:
 
 https://learn.microsoft.com/windows-server/virtualization/hyper-v/get-started/install-hyper-v
+
+## What the Hyper-V role adds
+
+Installing the role provides or enables components such as:
+
+- the Hyper-V hypervisor;
+- the Hyper-V Virtual Machine Management service, VMMS;
+- the virtualization management stack;
+- Hyper-V virtual networking components;
+- the Hyper-V PowerShell module;
+- Hyper-V Manager when management tools are included;
+- support for creating and managing child partitions.
+
+The exact set of installed components depends on whether management tools are included and on the Windows Server installation option.
+
+## Why the restart matters
+
+The Hyper-V hypervisor must be loaded during system startup.
+
+That is why installing the role normally requires a restart before the server can operate as a Hyper-V host.
+
+Conceptually:
+
+~~~text
+Before restart
+
+Windows Server
+     |
+Hyper-V role files present
+
+After restart
+
+Windows Server management OS
+     |
+Hyper-V virtualization stack
+     |
+Hypervisor
+     |
+Physical hardware
+~~~
+
+## Installed does not mean ready
+
+A successful role installation only confirms that the Hyper-V components are present.
+
+Before treating the server as ready for workloads, validate:
+
+- VMMS is running;
+- Hyper-V Manager or PowerShell can communicate with the host;
+- default VM and VHDX paths are appropriate;
+- required virtual switches exist;
+- storage has adequate capacity;
+- nested virtualization is available in this course environment.
+
+The rest of Day 2 performs those readiness checks step by step.
 
 # Lab 2.1 — Install Hyper-V on HV01
 
@@ -274,27 +331,173 @@ A consistent default path reduces accidental placement of VM configuration and V
 
 # Module 5 — Hyper-V management tools
 
-Hyper-V can be managed through several interfaces.
+Hyper-V can be administered locally or remotely using several different tools.
 
-| Tool | Typical use |
+The correct tool depends on the scale of the environment, whether the host is standalone or clustered, and whether the task is interactive, repetitive or automated.
+
+## Local vs remote management
+
+A Hyper-V host does not need to be administered only from its local console.
+
+Common approaches include:
+
+- local Hyper-V Manager on the host;
+- Hyper-V Manager from another Windows computer;
+- PowerShell locally or remotely;
+- Windows Admin Center;
+- Failover Cluster Manager for clustered environments;
+- System Center Virtual Machine Manager for larger managed fabrics.
+
+Remote management becomes especially important when production hosts run Server Core or when administrators manage many hosts from a separate workstation.
+
+## Hyper-V Manager
+
+Hyper-V Manager is the main graphical administration tool used in this course.
+
+It is suitable for:
+
+- creating and editing VMs;
+- starting and stopping VMs;
+- connecting to VM consoles;
+- managing checkpoints;
+- creating virtual switches;
+- inspecting virtual disks and network adapters;
+- connecting to additional Hyper-V hosts.
+
+Hyper-V Manager is excellent for understanding configuration visually, but repetitive operations are often faster and more consistent in PowerShell.
+
+## PowerShell Hyper-V module
+
+The Hyper-V module exposes the same platform through cmdlets.
+
+Examples:
+
+~~~powershell
+Get-VM
+Get-VMHost
+Get-VMSwitch
+Get-VMNetworkAdapter
+Get-VMHardDiskDrive
+~~~
+
+PowerShell is especially useful when:
+
+- querying many VMs;
+- standardizing configuration;
+- repeating the same operation;
+- collecting troubleshooting information;
+- scripting administrative workflows.
+
+## Windows Admin Center
+
+Windows Admin Center provides browser-based management for Windows Server infrastructure.
+
+It can manage Windows Server and Hyper-V hosts without requiring a full local desktop session on the target server.
+
+It is useful for:
+
+- remote server administration;
+- consolidated host views;
+- Hyper-V management;
+- storage, networking and event inspection.
+
+Windows Admin Center is introduced conceptually here; the course does not depend on it for the core labs.
+
+Reference:
+
+https://learn.microsoft.com/windows-server/manage/windows-admin-center/overview
+
+## Failover Cluster Manager
+
+Failover Cluster Manager becomes relevant when Hyper-V hosts participate in a Windows Failover Cluster.
+
+It is used for:
+
+- clustered roles;
+- clustered VMs;
+- ownership and failover;
+- Cluster Shared Volumes;
+- cluster health and dependencies.
+
+High availability is introduced on Day 3.
+
+## System Center Virtual Machine Manager
+
+System Center Virtual Machine Manager, SCVMM, is designed for larger enterprise virtualization estates.
+
+It adds capabilities such as:
+
+- centralized fabric management;
+- host groups;
+- templates;
+- library resources;
+- placement;
+- larger-scale VM lifecycle management.
+
+SCVMM is outside the hands-on scope of this course, but students should recognize where it fits.
+
+## Which tool for which task?
+
+| Task | Typical tool |
 |---|---|
-| Hyper-V Manager | Interactive host and VM management |
-| PowerShell Hyper-V module | Repeatable administration and automation |
-| Windows Admin Center | Browser-based infrastructure management |
-| Failover Cluster Manager | Clustered Hyper-V environments |
-| System Center Virtual Machine Manager | Larger enterprise virtualization estates |
+| Create one VM interactively | Hyper-V Manager |
+| Inspect one host visually | Hyper-V Manager / Windows Admin Center |
+| Query many VMs | PowerShell |
+| Apply repeatable VM settings | PowerShell |
+| Manage clustered Hyper-V roles | Failover Cluster Manager |
+| Browser-based remote administration | Windows Admin Center |
+| Manage a large virtualization fabric | SCVMM |
 
-For this course, the main tools are **Hyper-V Manager** and **PowerShell**.
+## Remote Hyper-V Manager concept
 
-## Explore the Hyper-V PowerShell module
+Hyper-V Manager can connect to another host using **Connect to Server**.
+
+In a production environment, remote connectivity also depends on:
+
+- authentication;
+- firewall rules;
+- name resolution;
+- administrative permissions;
+- management protocol configuration.
+
+Those dependencies become useful troubleshooting layers later in the course.
+
+## Exercise — Explore the Hyper-V management surface
+
+List Hyper-V commands:
 
 ~~~powershell
 Get-Command -Module Hyper-V
-Get-Command -Module Hyper-V *VM*
-Get-VM
 ~~~
 
-At this point Get-VM may return no virtual machines.
+Find VM-related commands:
+
+~~~powershell
+Get-Command -Module Hyper-V *VM*
+~~~
+
+Inspect the host:
+
+~~~powershell
+Get-VMHost
+~~~
+
+Inspect current VMs and switches:
+
+~~~powershell
+Get-VM
+Get-VMSwitch
+~~~
+
+### Validation
+
+Students should be able to identify which management tool they would choose for:
+
+1. creating a single VM;
+2. querying 30 VMs;
+3. managing a clustered VM;
+4. managing a remote server from a browser;
+5. applying the same VM setting repeatedly.
 
 ---
 
@@ -570,11 +773,111 @@ Get-VMSwitch | Select-Object Name,SwitchType
 
 ---
 
-# Module 9 — Create and configure SRV01
+# Module 9 — Create and configure a virtual machine
+
+Creating a VM is not only a wizard operation. A virtual machine is a collection of configuration choices that together define its virtual hardware, firmware, storage, networking and runtime behavior.
 
 Microsoft reference:
 
 https://learn.microsoft.com/windows-server/virtualization/hyper-v/get-started/create-a-virtual-machine-in-hyper-v
+
+## VM configuration model
+
+~~~text
+Virtual Machine
+|
++-- Firmware / Generation
++-- Virtual processors
++-- Memory
++-- Virtual disks
++-- Virtual network adapters
++-- Security settings
++-- Integration services
++-- Checkpoint settings
+~~~
+
+The VM configuration is separate from the guest operating system stored inside its VHDX files.
+
+That distinction matters operationally because:
+
+- a VM can exist without an installed operating system;
+- VHDX files can be attached or detached independently;
+- VM configuration can point to one or more virtual disks;
+- deleting a VM configuration does not always imply deleting every associated VHDX;
+- troubleshooting may involve either VM configuration or guest OS state.
+
+## Design before creation
+
+Before creating a VM, decide:
+
+~~~text
+Workload requirements
+        |
+Generation
+        |
+CPU / Memory
+        |
+Storage
+        |
+Networking
+        |
+Security / Secure Boot
+~~~
+
+For this course, the standard defaults are:
+
+- Generation 2;
+- UEFI;
+- Secure Boot enabled for supported Windows guests;
+- modest vCPU allocation;
+- Dynamic Memory where appropriate;
+- VHDX storage;
+- vSW-Lab networking.
+
+## Settings that may require the VM to be off
+
+Some VM settings can be changed while the VM is running, while others require the VM to be stopped.
+
+Students should develop the habit of checking the current VM state before applying configuration changes.
+
+Use:
+
+~~~powershell
+Get-VM SRV01
+~~~
+
+and inspect:
+
+~~~text
+State
+~~~
+
+Examples of settings commonly changed while the VM is off include certain firmware and hardware configuration options.
+
+The exact online/offline requirements vary by setting, so use PowerShell help or Hyper-V Manager to confirm before changing production workloads.
+
+## VM configuration vs guest configuration
+
+It is useful to separate:
+
+~~~text
+Hyper-V host view
+- vCPU
+- memory
+- VHDX
+- vNIC
+- firmware
+- vSwitch
+
+Guest OS view
+- hostname
+- IP address
+- filesystem
+- services
+- applications
+~~~
+
+A problem visible inside the guest may still originate from the Hyper-V configuration layer.
 
 # Lab 2.3 — Create SRV01
 
