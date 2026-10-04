@@ -1,10 +1,19 @@
 # Module 04 — Replica Authentication
 
+## Introduction
+
+Standalone Hyper-V hosts cannot rely on domain Kerberos for Replica, so HTTPS certificate identity becomes part of the recovery design. This module builds a lab-only PKI so every student can reproduce that trust model locally.
+
 ## Goal
 
 Create lab-only certificates for HTTPS Hyper-V Replica between standalone hosts.
 
 Production environments should use an organizational trusted PKI. This course uses an isolated lab-only root CA.
+
+
+## Concepts to keep in mind
+
+Certificate-based Replica depends on name resolution, matching CN/SAN identity, a private key, appropriate EKUs, trusted issuing root, and usable certificate validation. The self-signed CA here is for isolated training only.
 
 ## Name resolution
 
@@ -41,3 +50,23 @@ The self-signed course CA has no reachable CRL. Configure the documented lab-onl
 This weakens validation and is **not** a production recommendation.
 
 Use the canonical Day 3 guide for the complete certificate-creation commands.
+
+
+## What you will do
+
+Create the lab root and host certificates on the physical workstation, export/copy/import them, configure name mappings, verify certificate properties, and apply the documented lab-only revocation setting.
+
+
+## What you should observe
+
+Each host should trust the same lab root but hold only its own private host certificate in LocalMachine\My. The certificate DNS name should match the FQDN used for Replica.
+
+
+## Validation checkpoint
+
+Verify name resolution, private key presence, expiry, Client/Server Authentication EKUs, trusted root, recorded thumbprints, and the lab-only revocation setting.
+
+
+## Expected end state
+
+HV01 and HV02 have mutually trusted certificate identities ready for HTTPS Replica.
