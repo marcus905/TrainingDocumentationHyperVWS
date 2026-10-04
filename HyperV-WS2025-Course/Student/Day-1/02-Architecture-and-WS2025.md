@@ -48,3 +48,8 @@ Be able to distinguish Server Core from Desktop Experience and a role from a fea
 ## Expected end state
 
 You have a practical mental model of Windows Server that can be reused during configuration and troubleshooting.
+
+
+## What you will do
+
+Relate the Windows Server 2025 topics from the instructor explanation to this architecture instead of treating them as a disconnected feature list.
