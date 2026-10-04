@@ -8,12 +8,17 @@ Installing Windows is only part of the task. The two servers also need stable ma
 
 Install Windows Server 2025 and configure deterministic management addresses.
 
-Install Windows Server 2025 Datacenter with Desktop Experience on each 100 GB OS disk.
-
-
 ## Concepts to keep in mind
 
 The outer management network is a course dependency, not just an example. HV01 and HV02 must remain reachable on 192.168.240.11 and .12 throughout the week.
+
+## What you will do
+
+Install Windows Server on both outer VMs, configure their deterministic management addresses, verify gateway/DNS connectivity, then remove the installation DVD devices so D: remains available.
+
+## Hands-on / detailed content
+
+Install Windows Server 2025 Datacenter with Desktop Experience on each 100 GB OS disk.
 
 ## Configure HV01
 
@@ -42,17 +47,10 @@ Get-VMDvdDrive HV02 | Remove-VMDvdDrive
 
 Both servers should reach 192.168.240.1, external IP connectivity should work when allowed, and DNS queries should resolve after configuration.
 
-
 ## Validation checkpoint
 
 Validate IP address, prefix, gateway, DNS, and removal of the outer virtual DVD so drive D: remains available.
 
-
 ## Expected end state
 
 Both outer hosts boot with deterministic management networking and drive D: is free for the training data disk.
-
-
-## What you will do
-
-Install Windows Server on both outer VMs, configure their deterministic management addresses, verify gateway/DNS connectivity, then remove the installation DVD devices so D: remains available.
