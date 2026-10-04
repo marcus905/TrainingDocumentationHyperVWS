@@ -4,6 +4,11 @@
 
 SRV01 is the main workload VM for the rest of the course. Rather than accepting wizard defaults, this module deliberately applies the CPU, Dynamic Memory, storage, firmware, and network decisions discussed earlier.
 
+
+## Goal
+
+Create SRV01 with the agreed Generation 2, CPU, Dynamic Memory, storage, firmware, and virtual-network configuration.
+
 ## Concepts to keep in mind
 
 VM configuration and guest configuration are separate layers. Hyper-V defines virtual hardware; Windows inside the VM later configures its own IP addressing, disks, services, and applications.
