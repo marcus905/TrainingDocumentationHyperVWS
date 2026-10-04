@@ -85,6 +85,46 @@ A checkpoint should have a reason, an owner and a planned removal time.
 
 ---
 
+## Integration Services
+
+Hyper-V Integration Services are guest-facing components that improve communication and coordination between the Hyper-V host and supported guest operating systems.
+
+Useful services include:
+
+- **Heartbeat** — lets the host verify that the guest OS is responding;
+- **Time Synchronization** — coordinates guest time with the Hyper-V host;
+- **Shutdown** — allows the host to request a graceful guest shutdown;
+- **Guest Service Interface** — enables selected host-to-guest file operations;
+- **VSS / Backup integration** — supports application-consistent backup and Production Checkpoint workflows.
+
+Inspect SRV01:
+
+~~~powershell
+Get-VMIntegrationService -VMName SRV01
+~~~
+
+Review:
+
+- Name;
+- Enabled;
+- PrimaryStatusDescription.
+
+### Why this matters
+
+Integration Services sit at the boundary between VM configuration and guest behavior.
+
+A feature can exist at the Hyper-V layer but still depend on guest support and guest-side health.
+
+This is especially relevant to:
+
+- Production Checkpoints;
+- backup;
+- time synchronization;
+- graceful shutdown;
+- guest health monitoring.
+
+---
+
 # Lab 3.1 — Create, restore and remove a checkpoint
 
 ## Objective
@@ -744,6 +784,45 @@ This course introduces the architecture but does not build a complete production
 
 ---
 
+## Live Migration, Storage Migration and Replica
+
+These technologies are often grouped together because they all involve VM movement, but they solve different problems.
+
+| Technology | Moves running workload? | Moves storage? | Keeps a DR copy? | Typical use |
+|---|---:|---:|---:|---|
+| Live Migration | Yes | Not necessarily | No | Move a running VM between hosts with minimal interruption |
+| Storage Migration | No host change required | Yes | No | Move VM files between storage locations |
+| Hyper-V Replica | Recovery workload | Replicates selected VM disks | Yes | Disaster recovery |
+| Failover Clustering | Changes workload ownership between nodes | Uses shared/coordinated storage design | No separate replica required | High availability |
+
+### Live Migration
+
+Live Migration transfers execution of a running VM from one compatible Hyper-V host to another.
+
+Typical reasons include:
+
+- host maintenance;
+- balancing workloads;
+- hardware servicing.
+
+### Storage Migration
+
+Storage Migration moves VM files between storage locations without changing the VM's logical identity.
+
+Typical reasons include:
+
+- storage maintenance;
+- capacity balancing;
+- moving from older storage to newer storage.
+
+### Hyper-V Replica
+
+Replica maintains an asynchronous recovery copy.
+
+It is not simply another form of Live Migration because the replica is intended for recovery rather than routine host maintenance.
+
+---
+
 # Module 7 — Advanced Hyper-V storage
 
 Day 2 focused on individual VHDX files. Day 3 expands the discussion to the storage architecture underneath those files.
@@ -864,6 +943,56 @@ Exact counters available can vary by configuration and Windows version.
 
 ---
 
+## Basic tuning methodology
+
+Tuning should follow evidence, not guesswork.
+
+Use this sequence:
+
+~~~text
+Measure
+   |
+Identify constrained resource
+   |
+Change one variable
+   |
+Measure again
+   |
+Keep or revert the change
+~~~
+
+Useful VM configuration checks include:
+
+~~~powershell
+Get-VMProcessor SRV01
+Get-VMMemory SRV01
+Get-VMHardDiskDrive SRV01
+Get-VMNetworkAdapter SRV01
+~~~
+
+Possible corrective actions include:
+
+- adjusting vCPU count when CPU evidence supports it;
+- adjusting Dynamic Memory limits when memory pressure is demonstrated;
+- moving a VHDX to storage with better latency/capacity;
+- removing unnecessary checkpoints;
+- resolving host storage-capacity pressure;
+- correcting virtual-network configuration;
+- reducing unnecessary workload contention.
+
+### Tuning principle
+
+More resources are not automatically better.
+
+For example:
+
+- excess vCPU can increase scheduling contention;
+- excessive memory allocation can reduce host consolidation capacity;
+- unnecessary checkpoints can increase storage complexity;
+- moving a VM to faster storage helps only when storage is actually the bottleneck.
+
+---
+
 # Lab 3.8 — Build a basic performance baseline
 
 ## Objective
@@ -920,6 +1049,87 @@ Observations:
 ~~~
 
 This baseline becomes evidence during Day 4 troubleshooting.
+
+---
+
+# Lab 3.9 — Observe a controlled CPU workload
+
+## Objective
+
+Compare host and guest counters before, during and after a short, bounded workload.
+
+This is an observation exercise, not a stress test.
+
+## Step 1 — Capture a short guest baseline
+
+Inside SRV01:
+
+~~~powershell
+Get-Counter '\Processor(_Total)\% Processor Time' -SampleInterval 1 -MaxSamples 5
+~~~
+
+Record the approximate values.
+
+## Step 2 — Start a bounded CPU workload
+
+Run:
+
+~~~powershell
+1..200000 | ForEach-Object { [math]::Sqrt($_) } | Out-Null
+~~~
+
+If the workload completes too quickly to observe, repeat it a few times while watching Task Manager.
+
+Do not use an infinite loop.
+
+## Step 3 — Observe the guest
+
+While the workload runs, inspect:
+
+- Task Manager CPU;
+- Processor counter values;
+- running processes.
+
+Use:
+
+~~~powershell
+Get-Counter '\Processor(_Total)\% Processor Time' -SampleInterval 1 -MaxSamples 5
+~~~
+
+## Step 4 — Observe HV01
+
+On HV01:
+
+~~~powershell
+Get-VM SRV01 | Select-Object Name,CPUUsage,MemoryAssigned
+~~~
+
+Also observe host CPU in Task Manager or Performance Monitor.
+
+## Step 5 — Compare guest and host views
+
+Discuss:
+
+- Was guest CPU noticeably higher?
+- Did host CPU increase by the same amount?
+- Were other VMs competing for CPU?
+- Did the workload affect memory or disk significantly?
+- Did values return toward baseline afterward?
+
+## Step 6 — Return to baseline
+
+After the command completes, repeat the same counter checks.
+
+The system should return close to the earlier baseline.
+
+## Validation checkpoint
+
+- [ ] Baseline captured.
+- [ ] Controlled workload executed.
+- [ ] Guest CPU change observed.
+- [ ] Host CPU response observed.
+- [ ] Guest and host perspectives compared.
+- [ ] Counters returned toward baseline.
 
 ---
 
@@ -1087,8 +1297,11 @@ Students should be able to answer:
 14. Why can local Hyper-V storage be simple but unsuitable for clustered HA?
 15. Why should performance troubleshooting start with a baseline?
 16. Why can 100% CPU inside a guest mean something different from 100% host CPU?
-17. What role do DHCP and PXE play in bare-metal provisioning?
-18. Why should new deployment designs be cautious about depending on legacy WDS workflows?
+17. Why should tuning begin with measurement rather than resource increases?
+18. What role do Hyper-V Integration Services play?
+19. How do Live Migration, Storage Migration and Hyper-V Replica differ?
+20. What role do DHCP and PXE play in bare-metal provisioning?
+21. Why should new deployment designs be cautious about depending on legacy WDS workflows?
 
 ---
 
@@ -1112,6 +1325,10 @@ Students should be able to answer:
 - [ ] HA vs DR distinction understood.
 - [ ] Local, SMB, SAN, CSV and S2D storage concepts discussed.
 - [ ] Host and guest performance baseline recorded.
+- [ ] Controlled performance workload observed.
+- [ ] Basic evidence-driven tuning method understood.
+- [ ] Integration Services inspected.
+- [ ] Live Migration, Storage Migration and Replica differences understood.
 - [ ] Bare-metal/PXE deployment flow understood.
 - [ ] Current WDS direction/deprecation discussed.
 - [ ] Replica break/fix exercise completed using evidence.
