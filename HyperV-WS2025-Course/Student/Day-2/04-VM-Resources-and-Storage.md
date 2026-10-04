@@ -8,6 +8,16 @@ A VM is a collection of resource decisions, not just a name and an operating sys
 
 Understand virtual CPU, Dynamic Memory and VHDX choices.
 
+## Concepts to keep in mind
+
+Virtual processors are scheduled onto host CPU resources; Dynamic Memory changes assigned memory within configured boundaries; VHDX files represent virtual block devices whose type and placement affect capacity and performance.
+
+## What you will do
+
+Review the resource models and compare dynamic, fixed, and differencing disks before applying the course defaults to SRV01.
+
+## Hands-on / detailed content
+
 Dynamic Memory concepts: Startup, Minimum, Maximum, Buffer and Weight.
 
 Storage concepts: VHD vs VHDX, dynamically expanding, fixed and differencing disks.
@@ -21,29 +31,17 @@ D:\Hyper-V\Replica
 D:\Hyper-V\Export
 ~~~
 
-
-## Concepts to keep in mind
-
-Virtual processors are scheduled onto host CPU resources; Dynamic Memory changes assigned memory within configured boundaries; VHDX files represent virtual block devices whose type and placement affect capacity and performance.
-
 ## Validation
 
 Explain why adding vCPU or RAM without evidence is not automatically a performance improvement.
-
-## What you will do
-
-Review the resource models and compare dynamic, fixed, and differencing disks before applying the course defaults to SRV01.
-
 
 ## What you should observe
 
 The VM's configured limits are not the same as physical guarantees. A VM can be correctly configured and still suffer when the host is constrained.
 
-
 ## Validation checkpoint
 
 Explain Startup/Minimum/Maximum RAM and the operational differences between dynamic, fixed, and differencing virtual disks.
-
 
 ## Expected end state
 
