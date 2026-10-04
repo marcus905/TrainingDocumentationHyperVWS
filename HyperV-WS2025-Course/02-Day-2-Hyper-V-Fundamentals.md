@@ -1182,7 +1182,7 @@ Example:
 Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses 1.1.1.1
 ~~~
 
-Later, when DC01 becomes the lab DNS server, guest DNS configuration can be changed to use DC01.
+If the lab is later extended with Active Directory Domain Services and DNS, guest DNS configuration can then be changed to use DC01.
 
 ## Step 3 — Verify guest-to-host connectivity
 
@@ -1235,6 +1235,8 @@ Gateway:     172.22.0.1
 ~~~
 
 At this stage DC01 is only a Windows Server VM.
+
+The name **DC01** is reserved for an optional future extension in which the VM may be promoted to an Active Directory domain controller. The five-day core course does not require that promotion.
 
 Do not install AD DS or DNS unless the instructor explicitly chooses to extend the lab.
 
