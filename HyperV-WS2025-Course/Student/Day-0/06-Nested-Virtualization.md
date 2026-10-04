@@ -8,6 +8,16 @@ HV01 and HV02 are still ordinary VMs at this point. Exposing virtualization exte
 
 Expose virtualization extensions to HV01 and HV02.
 
+## Concepts to keep in mind
+
+Nested virtualization does not create another physical CPU. The outer hypervisor exposes virtualization capabilities to the guest so that Hyper-V can run inside that guest VM.
+
+## What you will do
+
+Power off HV01/HV02, expose virtualization extensions from the physical host, and verify the processor settings before starting the VMs again.
+
+## Hands-on / detailed content
+
 Power off both outer VMs, then on the physical host run:
 
 ~~~powershell
@@ -20,26 +30,14 @@ Expected: `ExposeVirtualizationExtensions = True`.
 
 Do not install Hyper-V inside HV01/HV02 yet.
 
-## Concepts to keep in mind
-
-Nested virtualization does not create another physical CPU. The outer hypervisor exposes virtualization capabilities to the guest so that Hyper-V can run inside that guest VM.
-
-
 ## What you should observe
 
 `ExposeVirtualizationExtensions` should report `True` for both HV01 and HV02.
-
 
 ## Validation checkpoint
 
 Confirm both VMs were powered off for the change and both processor configurations now expose virtualization extensions.
 
-
 ## Expected end state
 
 HV01 and HV02 are capable of hosting nested Hyper-V, but the role remains uninstalled until Day 2/Day 3.
-
-
-## What you will do
-
-Power off HV01/HV02, expose virtualization extensions from the physical host, and verify the processor settings before starting the VMs again.
