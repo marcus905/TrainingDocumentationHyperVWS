@@ -1303,10 +1303,10 @@ Example only:
 
 ~~~text
 HV01
-IPv4 address: 10.10.10.11
+IPv4 address: 192.168.240.11
 Prefix:       /24
 Gateway:      10.10.10.1
-DNS:          10.10.10.10
+DNS:          1.1.1.1
 ~~~
 
 Do not copy this example blindly if the class topology uses different addresses.
@@ -1332,7 +1332,7 @@ Get-NetIPConfiguration -InterfaceAlias "Ethernet"
 ### Step 3 — Configure the IP address
 
 ~~~powershell
-New-NetIPAddress -InterfaceAlias "Ethernet" -IPAddress 10.10.10.11 -PrefixLength 24 -DefaultGateway 10.10.10.1
+New-NetIPAddress -InterfaceAlias "Ethernet" -IPAddress 192.168.240.11 -PrefixLength 24 -DefaultGateway 192.168.240.1
 ~~~
 
 ### Read the command before running it
@@ -1348,13 +1348,13 @@ Students should verify the interface before executing this command.
 ### Step 4 — Configure DNS
 
 ~~~powershell
-Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses 10.10.10.10
+Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses 1.1.1.1
 ~~~
 
 For multiple DNS servers:
 
 ~~~powershell
-Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses 10.10.10.10,10.10.10.11
+Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses 1.1.1.1
 ~~~
 
 ### Step 5 — Validate
@@ -1368,7 +1368,7 @@ Get-NetRoute -AddressFamily IPv4
 Test:
 
 ~~~powershell
-Test-NetConnection 10.10.10.1
+Test-NetConnection 192.168.240.1
 Resolve-DnsName microsoft.com
 ~~~
 
@@ -1440,6 +1440,10 @@ Important fields:
 
 # Lab 1.5 — Prepare the Hyper-V data disk
 
+Day 0 attached a dedicated 200 GB dynamically expanding data disk to HV01.
+
+This lab initializes that disk and reserves drive **D:** for nested Hyper-V content.
+
 ## Safety check
 
 Before modifying a disk, identify the intended training disk:
@@ -1450,7 +1454,11 @@ Get-Disk | Format-Table Number,FriendlyName,PartitionStyle,OperationalStatus,Siz
 
 The instructor should confirm the disk number before students continue.
 
-For the examples below, assume the training disk is **Disk 1**.
+For the examples below, assume the training disk is **Disk 1** only after verifying its size and current state.
+
+The training disk should be the approximately 200 GB raw disk attached during Day 0.
+
+Do not initialize the Windows OS disk.
 
 ## Step 1 — Initialize the disk
 
@@ -1521,6 +1529,7 @@ New-Item -ItemType Directory -Path "D:\Hyper-V\VMs" -Force
 New-Item -ItemType Directory -Path "D:\Hyper-V\VHDX" -Force
 New-Item -ItemType Directory -Path "D:\Hyper-V\ISO" -Force
 New-Item -ItemType Directory -Path "D:\Hyper-V\Replica" -Force
+New-Item -ItemType Directory -Path "D:\Hyper-V\Export" -Force
 ~~~
 
 Verify:
@@ -1545,6 +1554,63 @@ D:\Hyper-V
 The exact production folder layout is an organizational decision.
 
 The purpose of this structure is to introduce predictable placement and operational consistency before installing Hyper-V.
+
+---
+
+# Lab 1.6 — Stage Windows Server installation media inside HV01
+
+## Objective
+
+Day 2 creates nested Windows Server VMs inside HV01.
+
+The Windows Server ISO currently exists on the physical Windows 11 host, so copy it into HV01 before Day 2.
+
+Target path:
+
+~~~text
+D:\Hyper-V\ISO\WS2025-EVAL-x64-EN.iso
+~~~
+
+## Recommended method — Hyper-V Guest Service Interface
+
+### Step 1 — Enable Guest Service Interface on HV01
+
+On the physical Windows 11 host:
+
+~~~powershell
+Enable-VMIntegrationService -VMName "HV01" -Name "Guest Service Interface"
+~~~
+
+Verify:
+
+~~~powershell
+Get-VMIntegrationService -VMName "HV01"
+~~~
+
+### Step 2 — Copy the ISO into HV01
+
+On the physical Windows 11 host:
+
+~~~powershell
+Copy-VMFile -Name "HV01" -SourcePath "C:\HyperV-Course\ISO\WS2025-EVAL-x64-EN.iso" -DestinationPath "D:\Hyper-V\ISO\WS2025-EVAL-x64-EN.iso" -FileSource Host -CreateFullPath
+~~~
+
+The destination path is interpreted inside HV01.
+
+### Step 3 — Verify inside HV01
+
+~~~powershell
+Get-Item "D:\Hyper-V\ISO\WS2025-EVAL-x64-EN.iso"
+Get-FileHash "D:\Hyper-V\ISO\WS2025-EVAL-x64-EN.iso" -Algorithm SHA256
+~~~
+
+Compare the hash with the source ISO on the physical host.
+
+## Alternative
+
+If Copy-VMFile is unavailable or blocked in the student's environment, use an instructor-approved temporary file-share method.
+
+Do not proceed to Day 2 until the ISO is present inside HV01.
 
 ---
 
@@ -1584,7 +1650,7 @@ Questions:
 Test the local gateway:
 
 ~~~powershell
-Test-NetConnection 10.10.10.1
+Test-NetConnection 192.168.240.1
 ~~~
 
 Test another known IP if supplied by the instructor.
