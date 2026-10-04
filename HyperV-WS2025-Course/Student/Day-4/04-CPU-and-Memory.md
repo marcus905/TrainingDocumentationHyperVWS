@@ -1,13 +1,16 @@
 # Module 04 — CPU and Memory Break/Fix
 
+## Introduction
+
+CPU and memory problems are common places for administrators to jump directly to resizing. These two incidents are designed to make you prove that a resource is constrained before changing the VM configuration.
 
 ## Concepts to keep in mind
 
 High CPU can be a legitimate workload, and low free memory alone does not prove harmful memory pressure. Compare demand, sustained behavior, guest evidence, and host capacity.
 
-## Introduction
+## What you will do
 
-CPU and memory problems are common places for administrators to jump directly to resizing. These two incidents are designed to make you prove that a resource is constrained before changing the VM configuration.
+Run the bounded CPU workload and investigate it across guest/VM/host layers. Then apply the constrained-memory recipe, investigate the resulting behavior, and restore the normal memory baseline.
 
 ## CPU scenario
 
@@ -68,21 +71,13 @@ Set-VMMemory -VMName SRV01 -DynamicMemoryEnabled $true -MinimumBytes 1GB -Startu
 Start-VM SRV01
 ~~~
 
-
-## What you will do
-
-Run the bounded CPU workload and investigate it across guest/VM/host layers. Then apply the constrained-memory recipe, investigate the resulting behavior, and restore the normal memory baseline.
-
-
 ## What you should observe
 
 The CPU scenario should show a clear workload-correlated rise. The memory scenario should show SRV01 operating with a much tighter configured ceiling than its normal baseline.
 
-
 ## Validation checkpoint
 
 For each incident, state whether the root cause is workload, VM configuration, or host contention and cite the evidence used.
-
 
 ## Expected end state
 
