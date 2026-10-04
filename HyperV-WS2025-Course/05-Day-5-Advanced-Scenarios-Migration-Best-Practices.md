@@ -827,11 +827,18 @@ Measure-VMReplication SRV01
 
 #### Break
 
-On HV01:
+On HV01, create a disposable VM and attach a valid disk:
 
 ~~~powershell
 New-VM -Name "CAPBROKEN01" -Generation 2 -MemoryStartupBytes 1GB -Path "D:\Hyper-V\VMs" -NoVHD
-Add-VMHardDiskDrive -VMName "CAPBROKEN01" -Path "D:\Hyper-V\VHDX\MISSING-CAPSTONE.vhdx"
+New-VHD -Path "D:\Hyper-V\VHDX\CAPBROKEN01-DISK.vhdx" -SizeBytes 2GB -Dynamic
+Add-VMHardDiskDrive -VMName "CAPBROKEN01" -Path "D:\Hyper-V\VHDX\CAPBROKEN01-DISK.vhdx"
+~~~
+
+Move the disk so the VM configuration still references its original path:
+
+~~~powershell
+Move-Item "D:\Hyper-V\VHDX\CAPBROKEN01-DISK.vhdx" "D:\Hyper-V\VHDX\CAPBROKEN01-DISK.moved"
 Start-VM CAPBROKEN01
 ~~~
 
@@ -842,7 +849,12 @@ Start-VM CAPBROKEN01
 #### Reset
 
 ~~~powershell
+if (Test-Path "D:\Hyper-V\VHDX\CAPBROKEN01-DISK.moved") {
+    Move-Item "D:\Hyper-V\VHDX\CAPBROKEN01-DISK.moved" "D:\Hyper-V\VHDX\CAPBROKEN01-DISK.vhdx"
+}
+
 Remove-VM -Name "CAPBROKEN01" -Force
+Remove-Item "D:\Hyper-V\VHDX\CAPBROKEN01-DISK.vhdx" -Force -ErrorAction SilentlyContinue
 ~~~
 
 ---
