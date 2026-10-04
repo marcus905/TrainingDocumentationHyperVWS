@@ -1,5 +1,9 @@
 # Module 05 — Enable Hyper-V Replica
 
+## Introduction
+
+With the recovery host and certificate trust in place, you can now configure the actual Replica relationship. The important part is not only completing the wizard, but understanding what is replicated, how often, where it lands, and how health is measured.
+
 ## Goal
 
 Configure HV02 as Replica server and replicate SRV01.
@@ -32,3 +36,28 @@ Validate:
 Get-VMReplication -VMName SRV01
 Measure-VMReplication -VMName SRV01
 ~~~
+
+
+## Concepts to keep in mind
+
+Replica is asynchronous. Replication frequency influences potential data loss, while disk selection and target storage determine what the recovery VM can actually reconstruct.
+
+
+## What you will do
+
+Enable HV02 as an HTTPS Replica server, enable the correct firewall rule, test protocol connectivity from HV01, then enable replication for SRV01 and start initial replication.
+
+
+## What you should observe
+
+`Test-VMReplicationConnection` should succeed before enabling SRV01 replication. During initial replication, health/state values will change until the target copy is synchronized.
+
+
+## Validation checkpoint
+
+Verify protocol connectivity, selected disks, target storage path, replication frequency, initial replication completion, and healthy `Get/Measure-VMReplication` output.
+
+
+## Expected end state
+
+SRV01 has a healthy asynchronous Replica relationship from HV01 to HV02.
