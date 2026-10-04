@@ -8,6 +8,16 @@ Performance troubleshooting needs a baseline before it needs a fix. This module 
 
 Build a baseline and tune from evidence rather than guesses.
 
+## Concepts to keep in mind
+
+High utilization is not automatically a problem. Look for sustained constraint, latency, queueing, memory pressure, or contention, and always consider the nested-lab outer layer when interpreting numbers.
+
+## What you will do
+
+Discover Hyper-V counters, record a basic host/guest baseline, run a bounded CPU workload, compare guest and host views, and then return to baseline.
+
+## Hands-on / detailed content
+
 Discover Hyper-V counters:
 
 ~~~powershell
@@ -23,11 +33,6 @@ Record:
 - guest CPU/memory behavior.
 
 Nested virtualization makes these training observations rather than physical-hardware benchmarks.
-
-
-## Concepts to keep in mind
-
-High utilization is not automatically a problem. Look for sustained constraint, latency, queueing, memory pressure, or contention, and always consider the nested-lab outer layer when interpreting numbers.
 
 ## Tuning method
 
@@ -51,21 +56,13 @@ Run a short bounded guest CPU workload and compare guest and host views before, 
 
 Do not assume that more vCPU or RAM automatically improves performance.
 
-
-## What you will do
-
-Discover Hyper-V counters, record a basic host/guest baseline, run a bounded CPU workload, compare guest and host views, and then return to baseline.
-
-
 ## What you should observe
 
 The guest may report high CPU even when the host still has capacity, or the host may be constrained while one guest appears normal. The relationship between layers is the teaching point.
 
-
 ## Validation checkpoint
 
 Identify which metric changed during the workload and explain what additional evidence you would need before resizing the VM.
-
 
 ## Expected end state
 
