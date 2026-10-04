@@ -4,6 +4,14 @@
 
 Day 3 builds on the working Hyper-V platform by adding state management, recovery, replication, storage architecture, and performance awareness. The focus shifts from 'can I run a VM?' to 'can I protect, recover, measure, and reason about it?'
 
+## Concepts to keep in mind
+
+Keep four ideas separate throughout the day: checkpoints, backup, Replica, and high availability. They can all involve copies or recovery, but they solve different operational problems.
+
+## What you will do
+
+Work through checkpoints first, then prepare HV02, configure Replica, test recovery, and finish with storage/performance concepts and a controlled Replica incident.
+
 ## Sequence
 
 1. [Checkpoints and Integration Services](01-Checkpoints-and-Integration-Services.md)
@@ -18,26 +26,13 @@ Day 3 builds on the working Hyper-V platform by adding state management, recover
 10. [Break/Fix — Replica](10-Break-Fix-Replica.md)
 11. [Day 3 check](99-Day-3-Check.md)
 
-
-## Concepts to keep in mind
-
-Keep four ideas separate throughout the day: checkpoints, backup, Replica, and high availability. They can all involve copies or recovery, but they solve different operational problems.
-
-
-## What you will do
-
-Work through checkpoints first, then prepare HV02, configure Replica, test recovery, and finish with storage/performance concepts and a controlled Replica incident.
-
-
 ## What you should observe
 
 By the end of the day, SRV01 should have a healthy recovery relationship to HV02 and you should be able to explain what each recovery technology can and cannot guarantee.
 
-
 ## Validation checkpoint
 
 Use the Day 3 checklist to confirm both hosts, certificate trust, Replica health, and test-failover behavior.
-
 
 ## Expected end state
 
