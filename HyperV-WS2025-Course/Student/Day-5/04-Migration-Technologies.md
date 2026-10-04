@@ -8,6 +8,16 @@ Live Migration, Storage Migration, and Hyper-V Replica can all involve moving or
 
 Distinguish Live Migration, Storage Migration and Replica.
 
+## Concepts to keep in mind
+
+Live Migration moves running compute ownership, Storage Migration relocates VM files, and Replica maintains an asynchronous recovery copy. Authentication, networking, compatibility, storage, and downtime expectations differ between them.
+
+## What you will do
+
+Inspect the current host migration settings, compare the three technologies against maintenance/refresh/DR scenarios, and discuss which authentication and network paths would need to be designed in production.
+
+## Hands-on / detailed content
+
 ### Live Migration
 
 Moves running workload execution between compatible Hyper-V hosts with minimal perceived downtime.
@@ -24,11 +34,6 @@ Typical use: storage maintenance, capacity balancing and storage refresh.
 
 Maintains an asynchronous recovery copy for disaster recovery.
 
-
-## Concepts to keep in mind
-
-Live Migration moves running compute ownership, Storage Migration relocates VM files, and Replica maintains an asynchronous recovery copy. Authentication, networking, compatibility, storage, and downtime expectations differ between them.
-
 ## Optional inspection
 
 ~~~powershell
@@ -41,21 +46,13 @@ Authentication/delegation choices matter. Use current Microsoft guidance for Win
 
 Hands-on Live Migration remains optional in the nested remote lab.
 
-
-## What you will do
-
-Inspect the current host migration settings, compare the three technologies against maintenance/refresh/DR scenarios, and discuss which authentication and network paths would need to be designed in production.
-
-
 ## What you should observe
 
 Enabling a migration feature is not the same as proving the environment is ready for it; host compatibility, permissions, authentication, and network design remain dependencies.
 
-
 ## Validation checkpoint
 
 For a host-maintenance, storage-refresh, and disaster-recovery requirement, select the appropriate technology and explain why the others do not directly solve it.
-
 
 ## Expected end state
 
