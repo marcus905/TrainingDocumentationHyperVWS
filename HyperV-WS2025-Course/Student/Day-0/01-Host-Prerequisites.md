@@ -8,10 +8,13 @@ Before building any virtual machines, confirm that the physical workstation can 
 
 Confirm that the physical workstation can run the complete nested Hyper-V lab.
 
-
 ## Concepts to keep in mind
 
 Nested virtualization consumes resources at two levels: HV01/HV02 are VMs on the physical workstation, and later they will host additional VMs. The physical host therefore needs enough headroom for both layers.
+
+## What you will do
+
+Run the platform checks, enable Hyper-V if required, restart when necessary, and confirm the workstation meets the minimum CPU, RAM, storage, and virtualization requirements before creating any course VMs.
 
 ## Required platform
 
@@ -54,17 +57,10 @@ Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All
 
 `systeminfo.exe` should show the Hyper-V requirements as satisfied, and Hyper-V should report as enabled after installation.
 
-
 ## Validation checkpoint
 
 Confirm the host edition, available RAM, free storage, hardware virtualization, SLAT, and local administrative access.
 
-
 ## Expected end state
 
 The physical workstation is confirmed suitable for the course and can host HV01 and HV02 without changing the lab design later.
-
-
-## What you will do
-
-Run the platform checks, enable Hyper-V if required, restart when necessary, and confirm the workstation meets the minimum CPU, RAM, storage, and virtualization requirements before creating any course VMs.
