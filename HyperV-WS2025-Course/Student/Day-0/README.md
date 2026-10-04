@@ -8,10 +8,13 @@ Day 0 is the foundation for the entire course. The objective is not to teach Hyp
 
 Build the outer lab that every later day depends on.
 
-
 ## Concepts to keep in mind
 
 Keep the two virtualization layers distinct: the physical Windows 11 Hyper-V host runs HV01/HV02, and those servers will later become nested Hyper-V hosts themselves.
+
+## What you will do
+
+Work through the modules in order and stop when a readiness check fails rather than carrying an unresolved prerequisite into the course.
 
 ## Sequence
 
@@ -23,20 +26,14 @@ Keep the two virtualization layers distinct: the physical Windows 11 Hyper-V hos
 6. [Enable nested virtualization](06-Nested-Virtualization.md)
 7. [Readiness check](99-Readiness-Check.md)
 
-## Expected end state
-
-Physical Windows 11 Pro/Enterprise host with vSW-Course/CourseNAT (192.168.240.0/24), HV01 at 192.168.240.11 and HV02 at 192.168.240.12. Each outer VM has a 100 GB OS disk, a 200 GB raw data disk, and nested virtualization exposed. Hyper-V inside HV01/HV02 is not installed yet.
-
-## What you will do
-
-Work through the modules in order and stop when a readiness check fails rather than carrying an unresolved prerequisite into the course.
-
-
 ## What you should observe
 
 By the end, HV01 and HV02 should look like predictable Windows Server systems on a dedicated outer management network, not ad-hoc VMs tied to the student's home LAN.
 
-
 ## Validation checkpoint
 
 Use the Day 0 readiness checklist as a hard gate before beginning Day 1.
+
+## Expected end state
+
+Physical Windows 11 Pro/Enterprise host with vSW-Course/CourseNAT (192.168.240.0/24), HV01 at 192.168.240.11 and HV02 at 192.168.240.12. Each outer VM has a 100 GB OS disk, a 200 GB raw data disk, and nested virtualization exposed. Hyper-V inside HV01/HV02 is not installed yet.
