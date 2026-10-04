@@ -552,6 +552,132 @@ https://learn.microsoft.com/windows-server/get-started/getting-started-with-serv
 
 ---
 
+## Windows Server architecture — a practical view
+
+For this course, it is useful to think of Windows Server as a set of layers rather than as a collection of isolated tools.
+
+At the bottom, hardware and firmware expose CPU, memory, storage and network devices. The Windows kernel and drivers provide the operating-system foundation. Core networking and storage subsystems sit above that foundation, followed by Windows services and the server roles/features that provide business functionality. Administration tools such as Server Manager and PowerShell operate across those layers.
+
+~~~text
+Hardware / Firmware
+        |
+Windows Kernel
+        |
+Drivers / Networking / Storage
+        |
+Windows Services
+        |
+Roles and Features
+        |
+Management Layer
+GUI / Server Manager / PowerShell / Remote tools
+~~~
+
+This layered view is important later in the course because the same user-visible symptom may originate from different layers. For example, a failed application connection might be caused by a service, DNS, routing, a virtual NIC, or an underlying host problem.
+
+### Architecture discussion points
+
+- The kernel and drivers provide the core operating-system and hardware abstraction layer.
+- Networking and storage subsystems expose the resources consumed by roles and applications.
+- Windows services provide background operating-system and application functionality.
+- Roles and features add server capabilities such as Hyper-V, DNS or file services.
+- Management can be local or remote and can be performed through graphical tools, PowerShell or browser-based tools.
+
+---
+
+## What is new in Windows Server 2025?
+
+Windows Server 2025 includes changes across security, storage, networking and server management. This course focuses only on the changes that are most relevant to infrastructure and Hyper-V administrators.
+
+Microsoft reference:
+
+https://learn.microsoft.com/windows-server/get-started/whats-new-windows-server-2025
+
+### Security improvements
+
+**Credential Guard** is enabled by default on supported Windows Server 2025 systems that meet the requirements. Credential Guard uses virtualization-based security to protect credentials such as NTLM hashes and Kerberos secrets.
+
+Reference:
+
+https://learn.microsoft.com/windows/security/identity-protection/credential-guard/configure
+
+**SMB security defaults** have also been strengthened. Windows Server 2025 requires SMB signing by default for outbound SMB connections and includes additional SMB hardening and auditing improvements.
+
+Reference:
+
+https://learn.microsoft.com/windows-server/storage/file-server/smb-feature-descriptions
+
+### SMB and file-services improvements
+
+Windows Server 2025 expands SMB capabilities, including:
+
+- SMB over QUIC availability in Standard and Datacenter;
+- additional SMB signing and encryption auditing;
+- SMB alternative port support;
+- more restrictive default firewall behavior for file sharing;
+- authentication rate limiting and NTLM-blocking capabilities.
+
+These changes matter for administrators because older assumptions about SMB connectivity and defaults may no longer apply.
+
+### Storage improvements
+
+Windows Server 2025 includes storage enhancements such as:
+
+- optimized NVMe performance;
+- Storage Replica compression;
+- Storage Replica Enhanced Log;
+- ReFS native deduplication and compression scenarios;
+- additional thin-provisioning capabilities in supported Storage Spaces Direct environments.
+
+The course does not implement all of these features, but they are relevant when comparing older Windows Server environments with Windows Server 2025.
+
+### Hotpatch
+
+Windows Server 2025 supports Hotpatch scenarios that can apply eligible security updates without rebooting the server, depending on the deployment model and current Microsoft support requirements.
+
+Reference:
+
+https://learn.microsoft.com/windows-server/get-started/hotpatch
+
+### Course perspective
+
+Students are not expected to configure every new Windows Server 2025 feature on Day 1. The objective is to recognize important platform changes and know where to validate current Microsoft guidance before deploying them.
+
+---
+
+## Day 1 deployment verification checklist
+
+The actual Windows Server installation is performed during Day 0 and briefly reviewed by the instructor at the beginning of Day 1.
+
+Before continuing with the Day 1 labs, verify:
+
+- [ ] HV01 boots normally.
+- [ ] Windows Server 2025 is installed.
+- [ ] Desktop Experience is the selected installation option.
+- [ ] The expected Standard or Datacenter edition is installed.
+- [ ] The system disk is healthy and has adequate free space.
+- [ ] The local Administrator account is usable.
+- [ ] No unexpected pending reboot is blocking configuration.
+- [ ] The VM clock and time zone are reasonable.
+- [ ] The VM has at least one connected network adapter.
+- [ ] PowerShell can be opened with administrative privileges.
+- [ ] Windows Server can be updated when the lab network provides Internet access.
+
+Useful verification commands:
+
+~~~powershell
+Get-ComputerInfo |
+    Select-Object WindowsProductName,WindowsEditionId,OsVersion,OsBuildNumber,CsName
+
+Get-Volume
+Get-NetAdapter
+Get-TimeZone
+~~~
+
+If any item fails, correct the lab environment before continuing.
+
+---
+
 # Lab 1.1 — Initial server inspection and configuration
 
 ## Objective
@@ -1053,6 +1179,120 @@ Example:
 
 ---
 
+# Exercise 1.3 — Verify and manage basic Windows services
+
+## Objective
+
+Use the Services management tools and PowerShell to confirm that essential Windows services exist, understand their current state and safely start a service when appropriate.
+
+This exercise is about operational verification, not changing production service policies.
+
+## Step 1 — Inspect selected services
+
+Run:
+
+~~~powershell
+Get-Service -Name EventLog,WinRM,W32Time
+~~~
+
+Review:
+
+- Name;
+- DisplayName;
+- Status.
+
+### What these services represent
+
+- **EventLog** — Windows Event Log service, required for system and application event logging.
+- **WinRM** — Windows Remote Management, used by many remote administration workflows.
+- **W32Time** — Windows Time service, used for time synchronization.
+
+## Step 2 — Inspect startup configuration
+
+Get-Service shows current runtime state, but not all configuration details.
+
+Run:
+
+~~~powershell
+Get-CimInstance Win32_Service |
+    Where-Object Name -in "EventLog","WinRM","W32Time" |
+    Select-Object Name,State,StartMode
+~~~
+
+Compare **State** with **StartMode**.
+
+A service can be configured for automatic startup but currently stopped, or configured manually and started only when needed.
+
+## Step 3 — Verify Event Log service
+
+~~~powershell
+Get-Service EventLog
+~~~
+
+Expected result:
+
+~~~text
+Status : Running
+~~~
+
+Do not stop the EventLog service during this lab.
+
+## Step 4 — Verify Windows Remote Management
+
+~~~powershell
+Get-Service WinRM
+~~~
+
+If WinRM is stopped and the instructor confirms it should be running in the lab:
+
+~~~powershell
+Start-Service WinRM
+~~~
+
+Verify:
+
+~~~powershell
+Get-Service WinRM
+~~~
+
+Then inspect the WinRM configuration:
+
+~~~powershell
+winrm enumerate winrm/config/listener
+~~~
+
+The exact listener state can vary depending on the server configuration and policy.
+
+## Step 5 — Verify Windows Time
+
+~~~powershell
+Get-Service W32Time
+w32tm /query /status
+~~~
+
+If the service is not running, discuss why time synchronization matters before changing the configuration.
+
+## Step 6 — GUI comparison
+
+Open **Services.msc** and locate:
+
+- Windows Event Log;
+- Windows Remote Management;
+- Windows Time.
+
+Compare the GUI values with the PowerShell output.
+
+## Validation
+
+Students should be able to explain the difference between:
+
+- service existence;
+- startup type;
+- current service state;
+- operational verification of the service.
+
+---
+
 # Module 4 — Basic networking configuration
 
 ## Addressing plan
@@ -1073,7 +1313,7 @@ Do not copy this example blindly if the class topology uses different addresses.
 
 ---
 
-## Lab 1.3 — Configure a static IPv4 address
+## Lab 1.4 — Configure a static IPv4 address
 
 ### Step 1 — Identify the interface name
 
@@ -1198,7 +1438,7 @@ Important fields:
 
 ---
 
-# Lab 1.4 — Prepare the Hyper-V data disk
+# Lab 1.5 — Prepare the Hyper-V data disk
 
 ## Safety check
 
@@ -1434,3 +1674,7 @@ Students should be able to answer:
 - Networking PowerShell reference: https://learn.microsoft.com/powershell/module/nettcpip/
 - DNS Client PowerShell reference: https://learn.microsoft.com/powershell/module/dnsclient/
 - Storage PowerShell reference: https://learn.microsoft.com/powershell/module/storage/
+- What's new in Windows Server 2025: https://learn.microsoft.com/windows-server/get-started/whats-new-windows-server-2025
+- Credential Guard: https://learn.microsoft.com/windows/security/identity-protection/credential-guard/configure
+- SMB features: https://learn.microsoft.com/windows-server/storage/file-server/smb-feature-descriptions
+- Hotpatch: https://learn.microsoft.com/windows-server/get-started/hotpatch
