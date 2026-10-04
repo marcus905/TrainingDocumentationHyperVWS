@@ -1297,19 +1297,17 @@ Students should be able to explain the difference between:
 
 ## Addressing plan
 
-The instructor should provide the final lab addressing plan.
-
-Example only:
+Day 0 established the outer management network used throughout the course:
 
 ~~~text
-HV01
-IPv4 address: 192.168.240.11
-Prefix:       /24
-Gateway:      10.10.10.1
-DNS:          1.1.1.1
+Network:      192.168.240.0/24
+Gateway/NAT:  192.168.240.1
+HV01:         192.168.240.11
+HV02:         192.168.240.12
+DNS:          1.1.1.1 or another instructor-approved external DNS server
 ~~~
 
-Do not copy this example blindly if the class topology uses different addresses.
+Day 1 validates this configuration and repairs it if necessary rather than introducing a separate example network.
 
 ---
 
