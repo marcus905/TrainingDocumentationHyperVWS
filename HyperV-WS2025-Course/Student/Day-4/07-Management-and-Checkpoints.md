@@ -1,5 +1,14 @@
 # Module 07 — Management and Checkpoint Break/Fix
 
+
+## Concepts to keep in mind
+
+A VM start operation depends on valid configuration, reachable storage, VMMS, and sufficient host resources. A checkpoint can be technically valid while still creating operational risk through age, growth, or free-space pressure.
+
+## Introduction
+
+Management failures are useful because they force you to separate the Hyper-V control plane from guest behavior. This module also revisits checkpoint growth from the operational side: a VM can be running while its storage dependencies or checkpoint chain are becoming unhealthy.
+
 ## Missing storage dependency
 
 Create a disposable VM and real disk:
@@ -19,3 +28,23 @@ Reset by moving the disk back, removing BROKEN01, then deleting the temporary VH
 ## Checkpoint growth
 
 Create a checkpoint, generate controlled guest writes, observe AVHDX/free-space behavior, identify whether the issue is checkpoint age/growth, capacity, workload writes or underlying storage, then remove the checkpoint and generated files.
+
+
+## What you will do
+
+Create the disposable missing-storage dependency fault, investigate without restarting VMMS as a first response, cleanly reset it, then review the separate checkpoint-growth scenario.
+
+
+## What you should observe
+
+BROKEN01 should exist in Hyper-V but fail to start because the configured disk path no longer resolves. In the checkpoint scenario, the VM can remain online while AVHDX/free-space behavior changes.
+
+
+## Validation checkpoint
+
+For each case, identify the management/storage evidence that proves the root cause and distinguish service failure from dependency failure.
+
+
+## Expected end state
+
+The disposable VM and files are removed, no training checkpoint remains, and VMMS is left in its normal running state.
