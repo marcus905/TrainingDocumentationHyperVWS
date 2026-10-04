@@ -1,13 +1,16 @@
 # Course Wrap-Up
 
+## Introduction
+
+The course closes by connecting the individual labs into one operational story. The objective is to recognize how the environment evolved from a basic Windows Server installation into a virtualized platform that can be measured, broken safely, recovered, standardized, and supported.
 
 ## Concepts to keep in mind
 
 The most reusable skill is the operating pattern: understand architecture, build deliberately, verify state, measure behavior, troubleshoot from evidence, recover safely, document, and standardize.
 
-## Introduction
+## What you will do
 
-The course closes by connecting the individual labs into one operational story. The objective is to recognize how the environment evolved from a basic Windows Server installation into a virtualized platform that can be measured, broken safely, recovered, standardized, and supported.
+Review the Day 1–5 evolution, present one capstone incident to the group, compare troubleshooting approaches, and identify the practices you would carry into a real Hyper-V environment.
 
 ## How the environment evolved
 
@@ -73,21 +76,13 @@ Understand
 - [ ] Final operational report delivered.
 - [ ] Collective debrief completed.
 
-
-## What you will do
-
-Review the Day 1–5 evolution, present one capstone incident to the group, compare troubleshooting approaches, and identify the practices you would carry into a real Hyper-V environment.
-
-
 ## What you should observe
 
 The commands changed from day to day, but the underlying habits—known baseline, layered thinking, evidence, safe changes, validation, and documentation—remained consistent.
 
-
 ## Validation checkpoint
 
 Explain the purpose of each course day in one sentence and describe one technical and one operational lesson you would apply in production.
-
 
 ## Expected end state
 
