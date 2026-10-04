@@ -25,17 +25,32 @@ Working documentation for a five-day remote course focused on Windows Server 202
 ## Lab topology
 ~~~text
 PHYSICAL STUDENT MACHINE
-Windows 11 Pro/Enterprise or Windows Server
+Windows 11 Pro/Enterprise
 Hyper-V
 |
-+-- HV01 - Windows Server 2025
-|   +-- DC01
-|   +-- SRV01
-|   +-- CLIENT01
+|-- vSW-Course / CourseNAT
+|   192.168.240.0/24
 |
-+-- HV02 - Windows Server 2025
-    +-- Replica workloads
++-- HV01 - Windows Server 2025 - 192.168.240.11
+|   |
+|   +-- vSW-Lab / LabNAT - 172.22.0.0/24
+|       +-- DC01 - 172.22.0.10
+|       +-- SRV01 - 172.22.0.20
+|       +-- CLIENT01 - optional
+|
++-- HV02 - Windows Server 2025 - 192.168.240.12
+    +-- Replica workloads / recovery-side vSW-Lab
 ~~~
+
+## Physical lab baseline
+
+- Windows 11 Pro or Enterprise, 64-bit;
+- Hyper-V enabled;
+- 24 GB RAM minimum, 32 GB+ recommended;
+- 250 GB free SSD/NVMe storage minimum, 350-500 GB recommended;
+- hardware virtualization and SLAT required.
+
+See Day 0 for the complete prerequisite and build procedure.
 
 ## Design principles
 1. Build one environment and evolve it throughout the week.
