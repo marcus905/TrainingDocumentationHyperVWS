@@ -38,3 +38,8 @@ Confirm both VMs were powered off for the change and both processor configuratio
 ## Expected end state
 
 HV01 and HV02 are capable of hosting nested Hyper-V, but the role remains uninstalled until Day 2/Day 3.
+
+
+## What you will do
+
+Power off HV01/HV02, expose virtualization extensions from the physical host, and verify the processor settings before starting the VMs again.
