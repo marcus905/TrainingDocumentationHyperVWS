@@ -4,6 +4,14 @@
 
 Day 2 turns HV01 from a prepared Windows Server into a working Hyper-V platform. The day moves from architecture to installation, then into the resources, storage, networking, and guest lifecycle that every later recovery and troubleshooting exercise depends on.
 
+## Concepts to keep in mind
+
+The key shift is from managing one Windows Server to managing a virtualization stack: host, hypervisor, virtual hardware, virtual networking, virtual storage, and guest operating systems.
+
+## What you will do
+
+Follow the sequence in order so the nested network exists before guests are created and every VM is validated before the first break/fix.
+
 ## Sequence
 
 1. [Virtualization and Hyper-V architecture](01-Architecture.md)
@@ -17,25 +25,13 @@ Day 2 turns HV01 from a prepared Windows Server into a working Hyper-V platform.
 9. [Break/Fix — network](09-Break-Fix-Network.md)
 10. [Day 2 check](99-Day-2-Check.md)
 
-## Concepts to keep in mind
-
-The key shift is from managing one Windows Server to managing a virtualization stack: host, hypervisor, virtual hardware, virtual networking, virtual storage, and guest operating systems.
-
-
-## What you will do
-
-Follow the sequence in order so the nested network exists before guests are created and every VM is validated before the first break/fix.
-
-
 ## What you should observe
 
 By the end of the day, SRV01 and DC01 should be ordinary manageable VMs on a predictable nested network rather than isolated wizard-created objects.
 
-
 ## Validation checkpoint
 
 Use the Day 2 validation checklist to confirm Hyper-V, networking, guest storage, and connectivity are all in the expected baseline.
-
 
 ## Expected end state
 
