@@ -20,21 +20,17 @@ Day 2 creates the platform that all advanced work depends on. This checklist mak
 
 A later Day 3 failure is much easier to diagnose if today's switch names, NAT, VM paths, guest addresses, and resource settings are already verified.
 
-
 ## What you will do
 
 Review each item and re-run the relevant host or guest command wherever the state is uncertain.
-
 
 ## What you should observe
 
 A healthy Day 2 lab has SRV01 and DC01 on vSW-Lab, predictable VHDX paths, working NAT, and no leftover network fault.
 
-
 ## Validation checkpoint
 
 Do not proceed if SRV01 cannot reach its gateway, the Internet test path, or if VM storage/switch mappings differ from the course baseline.
-
 
 ## Expected end state
 
