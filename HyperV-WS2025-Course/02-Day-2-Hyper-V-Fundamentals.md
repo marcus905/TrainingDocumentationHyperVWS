@@ -1,28 +1,215 @@
 # Day 2 — Hyper-V Fundamentals
 
 ## Learning objectives
-Students should be able to explain Hyper-V architecture, install the role, create/configure VMs, configure vCPU/memory/storage/networking, create virtual switches and verify connectivity.
 
-## Module 1 — Hyper-V architecture
-Topics:
-- Type-1 hypervisor
-- root/management partition
-- child partitions
-- VMBus
-- Generation 1 vs Generation 2
-- virtual processors
-- static and Dynamic Memory
-- VHD/VHDX
-- virtual NICs and switches
+By the end of Day 2, students should be able to:
 
-Reference: https://learn.microsoft.com/windows-server/virtualization/hyper-v/overview
+- explain the purpose and basic concepts of server virtualization;
+- describe the main components of Hyper-V architecture;
+- explain the role of the root partition, child partitions, VMBus, VSPs and VSCs;
+- install and validate the Hyper-V role on Windows Server 2025;
+- use Hyper-V Manager and PowerShell to manage the host;
+- create and configure Generation 2 virtual machines;
+- configure virtual CPU and memory;
+- understand VHDX storage basics;
+- create and use Hyper-V virtual switches;
+- configure an Internal switch with NAT for the nested course lab;
+- verify connectivity between the Hyper-V host, nested VM and external network;
+- recognize high-level operational differences between Hyper-V and other hypervisors.
 
-## Lab 2.1 — Install Hyper-V
+---
+
+# Module 1 — Virtualization fundamentals
+
+## Why virtualization?
+
+Virtualization allows multiple isolated operating systems to share the same physical server hardware.
+
+Instead of dedicating one physical server to each workload, a hypervisor presents virtualized CPU, memory, storage and networking resources to virtual machines.
+
+~~~text
+Physical Hardware
+       |
+    Hypervisor
+       |
++------+------+------+
+|      |      |
+VM1    VM2    VM3
+~~~
+
+### Main benefits
+
+Virtualization can provide:
+
+- improved hardware utilization;
+- workload isolation;
+- faster server provisioning;
+- easier testing and development;
+- simpler recovery and replication scenarios;
+- standardized virtual hardware;
+- workload mobility between compatible hosts.
+
+Virtualization does not remove physical resource limits. All VMs still ultimately share the host CPU, memory, storage and network resources.
+
+---
+
+# Module 2 — Hyper-V architecture
+
+Hyper-V is Microsoft's Type-1 hypervisor technology. The hypervisor runs directly on the hardware and creates isolated execution environments called partitions. The Windows management operating system runs in the **root partition**, while virtual machines run in **child partitions**.
+
+Microsoft reference:
+
+https://learn.microsoft.com/windows-server/virtualization/hyper-v/architecture
+
+## Simplified architecture
+
+~~~text
++------------------------------------------------------+
+|                 Management Tools                     |
+|       Hyper-V Manager / PowerShell / WAC             |
++--------------------------+---------------------------+
+                           |
++--------------------------v---------------------------+
+|                    Root Partition                    |
+| Windows Server 2025                                   |
+| VMMS / virtualization stack / device drivers          |
+| VSPs - Virtualization Service Providers               |
++--------------------------+---------------------------+
+                           |
+                         VMBus
+             +-------------+-------------+
+             |                           |
++------------v------------+  +-----------v------------+
+|     Child Partition     |  |    Child Partition     |
+|        SRV01            |  |         DC01           |
+| Guest OS                |  | Guest OS               |
+| VSCs                    |  | VSCs                   |
++-------------------------+  +------------------------+
+             |
++------------v-----------------------------------------+
+|                    Hypervisor                        |
++------------------------------------------------------+
+|                Physical Hardware                     |
+| CPU / Memory / Storage / Network                     |
++------------------------------------------------------+
+~~~
+
+## Root partition
+
+The root partition:
+
+- runs the Windows management operating system;
+- owns the physical device drivers;
+- hosts the virtualization management stack;
+- creates and manages child partitions;
+- provides access to physical I/O resources on behalf of VMs.
+
+The root partition is not simply another VM. It has a privileged management role in Hyper-V architecture.
+
+## Child partitions
+
+Virtual machines run in child partitions.
+
+Child partitions:
+
+- have a virtualized view of processors and memory;
+- do not directly control the physical hardware;
+- access virtual devices through the Hyper-V virtualization stack;
+- remain isolated from other child partitions.
+
+## VMBus
+
+The **VMBus** is a high-speed logical communication channel between the root partition and child partitions.
+
+It is used by synthetic Hyper-V devices to exchange I/O efficiently between the guest and host.
+
+## VSP and VSC
+
+Hyper-V uses:
+
+- **VSP — Virtualization Service Provider** in the root partition;
+- **VSC — Virtualization Service Client** in the guest.
+
+The VSC communicates with the corresponding VSP through VMBus.
+
+This design avoids emulating every hardware operation and provides more efficient I/O for supported guest operating systems.
+
+---
+
+# Module 3 — Hyper-V terminology and VM generations
+
+Microsoft reference:
+
+https://learn.microsoft.com/windows-server/virtualization/hyper-v/features-terminology
+
+## Generation 1 vs Generation 2
+
+Hyper-V supports two VM generations. The generation is selected when the VM is created and cannot be changed later.
+
+Microsoft recommends Generation 2 for most modern workloads.
+
+| Feature | Generation 1 | Generation 2 |
+|---|---|---|
+| Firmware | Legacy BIOS | UEFI |
+| Secure Boot | No | Yes |
+| Legacy device compatibility | Higher | Reduced |
+| Modern Windows workloads | Supported | Preferred |
+| Boot from SCSI | No | Yes |
+| Recommended for new WS2025 VMs | Only when specifically required | Yes |
+
+For this course, all newly created virtual machines use **Generation 2** unless an exercise explicitly states otherwise.
+
+Reference:
+
+https://learn.microsoft.com/windows-server/virtualization/hyper-v/plan/should-i-create-a-generation-1-or-2-virtual-machine-in-hyper-v
+
+---
+
+# Module 4 — Install and validate the Hyper-V role
+
+Microsoft reference:
+
+https://learn.microsoft.com/windows-server/virtualization/hyper-v/get-started/install-hyper-v
+
+# Lab 2.1 — Install Hyper-V on HV01
+
+## Objective
+
+Install the Hyper-V role and management tools on the nested Windows Server 2025 host HV01.
+
+Before continuing, verify that nested virtualization was enabled during Day 0.
+
+## Step 1 — Verify current role state
+
+~~~powershell
+Get-WindowsFeature Hyper-V
+~~~
+
+Expected before installation:
+
+~~~text
+Install State : Available
+~~~
+
+## Step 2 — Preview the installation
+
+Apply the WhatIf pattern from Day 1:
+
+~~~powershell
+Install-WindowsFeature -Name Hyper-V -IncludeManagementTools -WhatIf
+~~~
+
+Confirm that the preview includes Hyper-V and the relevant management components.
+
+## Step 3 — Install the role
+
 ~~~powershell
 Install-WindowsFeature -Name Hyper-V -IncludeManagementTools -Restart
 ~~~
 
-After restart:
+The server restarts automatically if required.
+
+## Step 4 — Validate after restart
 
 ~~~powershell
 Get-WindowsFeature Hyper-V
@@ -30,31 +217,384 @@ Get-Service vmms
 Get-VMHost
 ~~~
 
-## Module 2 — Virtual networking
-Switch types:
-- External: connects VMs to a physical network.
-- Internal: connects host and attached VMs.
-- Private: connects only attached VMs.
+Expected:
 
-Reference: https://learn.microsoft.com/windows-server/virtualization/hyper-v/get-started/create-a-virtual-switch-for-hyper-v-virtual-machines
+- Hyper-V reports Installed;
+- VMMS reports Running;
+- Get-VMHost returns HV01 configuration.
 
-## Lab 2.2 — Create lab switches
+Review fields such as:
+
+- ComputerName;
+- VirtualMachinePath;
+- VirtualHardDiskPath;
+- LogicalProcessorCount;
+- MemoryCapacity;
+- EnableEnhancedSessionMode.
+
+## Step 5 — Open Hyper-V Manager
+
+Launch **Hyper-V Manager** and confirm that HV01 appears as the connected host.
+
+## Validation checkpoint
+
+- [ ] Hyper-V role reports Installed.
+- [ ] VMMS is Running.
+- [ ] Hyper-V Manager opens successfully.
+- [ ] Get-VMHost returns HV01 configuration.
+
+---
+
+# Module 5 — Hyper-V management tools
+
+Hyper-V can be managed through several interfaces.
+
+| Tool | Typical use |
+|---|---|
+| Hyper-V Manager | Interactive host and VM management |
+| PowerShell Hyper-V module | Repeatable administration and automation |
+| Windows Admin Center | Browser-based infrastructure management |
+| Failover Cluster Manager | Clustered Hyper-V environments |
+| System Center Virtual Machine Manager | Larger enterprise virtualization estates |
+
+For this course, the main tools are **Hyper-V Manager** and **PowerShell**.
+
+## Explore the Hyper-V PowerShell module
+
 ~~~powershell
-New-VMSwitch -Name "vSW-Lab" -SwitchType Internal
-Get-VMSwitch
-Get-NetAdapter
+Get-Command -Module Hyper-V
+Get-Command -Module Hyper-V *VM*
+Get-VM
 ~~~
 
-Also create a Private switch. External switching should be demonstrated carefully during remote delivery.
+At this point Get-VM may return no virtual machines.
 
-## Lab 2.3 — Create SRV01
+---
+
+# Module 6 — Virtual CPU and memory
+
+## Virtual processors
+
+A VM is assigned one or more **virtual processors (vCPUs)**.
+
+The hypervisor schedules virtual processors onto the host's logical processors.
+
+Assigning more vCPUs does not automatically make a VM faster. Oversizing can increase scheduling contention and may reduce overall efficiency.
+
+For this course, start small and increase resources only when evidence justifies it.
+
+## Static memory
+
+With static memory, the VM receives a fixed amount of RAM while running.
+
+~~~text
+Startup RAM: 4 GB
+Dynamic Memory: Disabled
+~~~
+
+## Dynamic Memory
+
+Dynamic Memory allows Hyper-V to adjust the memory assigned to a running VM according to workload demand and configured limits.
+
+Microsoft reference:
+
+https://learn.microsoft.com/windows-server/virtualization/hyper-v/dynamic-memory
+
+Important settings:
+
+- **Startup RAM** — memory available during VM startup;
+- **Minimum RAM** — lower boundary Hyper-V can reclaim toward after startup;
+- **Maximum RAM** — upper boundary Hyper-V can allocate;
+- **Memory Buffer** — additional memory target above current demand;
+- **Memory Weight** — relative priority when the host is under memory pressure.
+
+Dynamic Memory can improve consolidation, but it is not appropriate for every workload. Application support requirements must always be checked.
+
+---
+
+# Module 7 — Hyper-V storage fundamentals
+
+Hyper-V virtual machines normally use virtual hard disks.
+
+## VHD and VHDX
+
+**VHDX** is the preferred format for modern Hyper-V workloads.
+
+For this course, use VHDX unless a compatibility exercise explicitly requires VHD.
+
+## Common virtual disk types
+
+### Dynamically expanding
+
+The file grows as data is written, up to its configured maximum size.
+
+Advantages:
+
+- efficient initial use of host storage;
+- quick to create.
+
+Considerations:
+
+- the host must still have enough free space as the disk grows;
+- uncontrolled growth can create capacity problems.
+
+### Fixed size
+
+The full configured capacity is allocated when the disk is created.
+
+Advantages:
+
+- predictable space allocation;
+- useful in some performance-sensitive or operationally controlled scenarios.
+
+Considerations:
+
+- takes the full amount of host storage immediately;
+- creation can take longer.
+
+### Differencing disks
+
+A differencing disk stores changes relative to a parent virtual disk.
+
+They are useful in specific deployment and lab scenarios, but introduce parent-child dependencies and should be managed carefully.
+
+Checkpoint disks are covered in detail on Day 3.
+
+## Course storage standard
+
+~~~text
+D:\Hyper-V
+|
++-- VMs
++-- VHDX
++-- ISO
++-- Replica
+~~~
+
+For Day 2:
+
+- VM configuration files go under D:\Hyper-V\VMs;
+- virtual hard disks go under D:\Hyper-V\VHDX;
+- ISO media goes under D:\Hyper-V\ISO.
+
+---
+
+# Module 8 — Hyper-V virtual networking
+
+A Hyper-V virtual switch is a software-based Layer 2 Ethernet switch implemented by Hyper-V.
+
+Microsoft reference:
+
+https://learn.microsoft.com/windows-server/virtualization/hyper-v/get-started/create-a-virtual-switch-for-hyper-v-virtual-machines
+
+## External switch
+
+~~~text
+VM
+ |
+Hyper-V External vSwitch
+ |
+Physical NIC
+ |
+Physical Network
+~~~
+
+An External switch allows VMs to communicate with systems outside the host through a physical network adapter.
+
+In a remote nested-lab environment, creating an External switch inside HV01 introduces additional dependencies on the outer virtualization layer.
+
+For that reason, **External switching is demonstrated conceptually, but is not the standard nested-lab path for this course**.
+
+## Internal switch
+
+~~~text
+          HV01
+           |
+     vEthernet adapter
+           |
+       Internal
+       vSwitch
+       /     \
+    SRV01   DC01
+~~~
+
+An Internal switch connects the Hyper-V host and VMs attached to the switch. It does not directly bridge those VMs to the physical network.
+
+## Private switch
+
+~~~text
+SRV01 ---- Private vSwitch ---- DC01
+~~~
+
+A Private switch connects VMs to each other but does not provide host connectivity.
+
+## Lab networking design
+
+The course uses an **Internal switch plus Windows NAT**.
+
+~~~text
+Outer physical/virtual network
+            |
+           HV01
+     Windows NAT function
+            |
+      172.22.0.1/24
+            |
+        vSW-Lab
+       /       \
+   DC01        SRV01
+172.22.0.10  172.22.0.20
+~~~
+
+This design gives the nested VMs:
+
+- connectivity to HV01;
+- connectivity to each other;
+- outbound connectivity through HV01;
+- a predictable course subnet.
+
+Windows NAT does not provide DHCP in this design, so nested VMs use static addresses.
+
+---
+
+# Lab 2.2 — Create the course virtual network
+
+## Objective
+
+Create the Internal vSwitch and NAT configuration used by the nested lab for the remainder of the course.
+
+## Addressing plan
+
+~~~text
+Network:  172.22.0.0/24
+Gateway:  172.22.0.1
+
+DC01:     172.22.0.10
+SRV01:    172.22.0.20
+CLIENT01: 172.22.0.100
+~~~
+
+The host-side Internal switch adapter uses 172.22.0.1.
+
+## Step 1 — Check existing virtual switches
+
 ~~~powershell
-New-VM -Name "SRV01" -Generation 2 -MemoryStartupBytes 2GB -NewVHDPath "D:\Hyper-V\VHDX\SRV01.vhdx" -NewVHDSizeBytes 50GB -SwitchName "vSW-Lab"
+Get-VMSwitch
+~~~
+
+Confirm that no switch named vSW-Lab already exists.
+
+## Step 2 — Create the Internal switch
+
+~~~powershell
+New-VMSwitch -Name "vSW-Lab" -SwitchType Internal
+Get-VMSwitch -Name "vSW-Lab"
+~~~
+
+Expected:
+
+~~~text
+SwitchType : Internal
+~~~
+
+## Step 3 — Locate the host-side virtual adapter
+
+~~~powershell
+Get-NetAdapter | Where-Object Name -like "*vSW-Lab*"
+~~~
+
+Hyper-V creates a host adapter typically named:
+
+~~~text
+vEthernet (vSW-Lab)
+~~~
+
+## Step 4 — Assign the gateway address
+
+~~~powershell
+New-NetIPAddress -InterfaceAlias "vEthernet (vSW-Lab)" -IPAddress 172.22.0.1 -PrefixLength 24
+Get-NetIPAddress -InterfaceAlias "vEthernet (vSW-Lab)" -AddressFamily IPv4
+~~~
+
+## Step 5 — Create NAT
+
+~~~powershell
+Get-NetNat
+New-NetNat -Name "LabNAT" -InternalIPInterfaceAddressPrefix "172.22.0.0/24"
+Get-NetNat -Name "LabNAT"
+~~~
+
+Only create the NAT object once. If LabNAT already exists, inspect it before changing anything.
+
+## Step 6 — Create a Private switch for comparison
+
+~~~powershell
+New-VMSwitch -Name "vSW-Private" -SwitchType Private
+Get-VMSwitch | Select-Object Name,SwitchType
+~~~
+
+## Validation checkpoint
+
+- [ ] vSW-Lab exists and is Internal.
+- [ ] vEthernet (vSW-Lab) has 172.22.0.1/24.
+- [ ] LabNAT exists for 172.22.0.0/24.
+- [ ] vSW-Private exists.
+- [ ] Students can explain Internal vs Private.
+
+---
+
+# Module 9 — Create and configure SRV01
+
+Microsoft reference:
+
+https://learn.microsoft.com/windows-server/virtualization/hyper-v/get-started/create-a-virtual-machine-in-hyper-v
+
+# Lab 2.3 — Create SRV01
+
+## Objective
+
+Create a Generation 2 Windows Server 2025 VM and configure its virtual CPU, Dynamic Memory, storage, firmware and networking.
+
+## VM specification
+
+~~~text
+Name:            SRV01
+Generation:      2
+vCPU:            2
+Startup RAM:     2 GB
+Minimum RAM:     1 GB
+Maximum RAM:     4 GB
+OS disk:         50 GB VHDX
+Network:         vSW-Lab
+Guest IP:        172.22.0.20/24
+Gateway:         172.22.0.1
+~~~
+
+## Step 1 — Create with Hyper-V Manager
+
+Use **New > Virtual Machine**.
+
+Configure:
+
+1. Name: SRV01.
+2. Generation: Generation 2.
+3. Startup memory: 2048 MB.
+4. Connect to vSW-Lab.
+5. Create a 50 GB VHDX under D:\Hyper-V\VHDX.
+6. Attach the Windows Server 2025 ISO from D:\Hyper-V\ISO.
+7. Finish the wizard.
+
+Then open VM Settings and configure 2 virtual processors.
+
+## Step 2 — Review the PowerShell equivalent
+
+~~~powershell
+New-VM -Name "SRV01" -Generation 2 -MemoryStartupBytes 2GB -Path "D:\Hyper-V\VMs" -NewVHDPath "D:\Hyper-V\VHDX\SRV01.vhdx" -NewVHDSizeBytes 50GB -SwitchName "vSW-Lab"
 Set-VMProcessor -VMName "SRV01" -Count 2
 Set-VMMemory -VMName "SRV01" -DynamicMemoryEnabled $true -MinimumBytes 1GB -StartupBytes 2GB -MaximumBytes 4GB
 ~~~
 
-Inspect:
+## Step 3 — Inspect VM configuration
 
 ~~~powershell
 Get-VM SRV01
@@ -62,59 +602,329 @@ Get-VMProcessor SRV01
 Get-VMMemory SRV01
 Get-VMNetworkAdapter SRV01
 Get-VMHardDiskDrive SRV01
-~~~
-
-## Lab 2.4 — Install guest OS
-Attach Windows Server 2025 ISO, boot SRV01, install the guest, configure hostname/IP and validate host-to-guest connectivity.
-
-~~~powershell
-Get-VMDvdDrive SRV01
 Get-VMFirmware SRV01
 ~~~
 
-## Lab 2.5 — Create DC01
-Suggested: Generation 2, 2 vCPU, 2 GB startup RAM, 40 GB disk, vSW-Lab.
+Students should identify:
 
-## Break/Fix 2 — Virtual networking
-Possible faults:
-- wrong switch;
-- disconnected vNIC;
-- wrong subnet;
-- wrong gateway;
-- duplicate IP;
-- bad DNS.
+- VM state;
+- vCPU count;
+- memory limits;
+- connected switch;
+- VHDX path;
+- firmware configuration.
 
-Host:
+## Step 4 — Confirm Secure Boot
 
 ~~~powershell
-Get-VMSwitch
-Get-VMNetworkAdapter -VMName SRV01
+Get-VMFirmware SRV01 | Select-Object SecureBoot
 ~~~
 
-Guest:
+Do not disable Secure Boot for a supported Windows Server 2025 guest.
+
+---
+
+# Lab 2.4 — Install Windows Server 2025 in SRV01
+
+## Step 1 — Verify ISO attachment
 
 ~~~powershell
-ipconfig /all
+Get-VMDvdDrive SRV01
+~~~
+
+If the ISO has not been attached:
+
+~~~powershell
+Add-VMDvdDrive -VMName "SRV01" -Path "D:\Hyper-V\ISO\WS2025-EVAL-x64-EN.iso"
+~~~
+
+If your ISO filename differs, use the actual local path.
+
+## Step 2 — Set DVD as first boot device if required
+
+~~~powershell
+$DVD = Get-VMDvdDrive SRV01
+Set-VMFirmware -VMName SRV01 -FirstBootDevice $DVD
+~~~
+
+## Step 3 — Start and connect
+
+~~~powershell
+Start-VM SRV01
+vmconnect.exe localhost SRV01
+~~~
+
+Install Windows Server 2025 with Desktop Experience.
+
+After installation:
+
+1. set the Administrator password;
+2. sign in;
+3. rename the guest to SRV01 if necessary;
+4. restart if required.
+
+---
+
+# Lab 2.5 — Configure SRV01 networking
+
+## Step 1 — Inspect the guest adapter
+
+Inside SRV01:
+
+~~~powershell
+Get-NetAdapter
 Get-NetIPConfiguration
-Get-NetRoute
-Test-NetConnection
-Resolve-DnsName
 ~~~
 
-Students must locate the fault layer: guest, Hyper-V networking, host or upstream.
+## Step 2 — Configure static IPv4
 
-## End-of-day validation
-- [ ] Hyper-V installed.
-- [ ] VMMS operational.
-- [ ] vSW-Lab created.
-- [ ] SRV01 created.
-- [ ] CPU and Dynamic Memory understood.
-- [ ] VHDX path documented.
-- [ ] Guest networking operational.
-- [ ] VM configuration inspectable through PowerShell.
+Assuming the adapter is named Ethernet:
 
-## Microsoft references
-- https://learn.microsoft.com/windows-server/virtualization/hyper-v/overview
-- https://learn.microsoft.com/windows-server/virtualization/hyper-v/get-started/install-hyper-v
-- https://learn.microsoft.com/windows-server/virtualization/hyper-v/get-started/create-a-virtual-switch-for-hyper-v-virtual-machines
-- https://learn.microsoft.com/windows-server/virtualization/hyper-v/enable-nested-virtualization
+~~~powershell
+New-NetIPAddress -InterfaceAlias "Ethernet" -IPAddress 172.22.0.20 -PrefixLength 24 -DefaultGateway 172.22.0.1
+~~~
+
+For Day 2, use a DNS server reachable through the lab NAT as instructed by the trainer.
+
+Example:
+
+~~~powershell
+Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses 1.1.1.1
+~~~
+
+Later, when DC01 becomes the lab DNS server, guest DNS configuration can be changed to use DC01.
+
+## Step 3 — Verify guest-to-host connectivity
+
+~~~powershell
+Test-NetConnection 172.22.0.1
+~~~
+
+## Step 4 — Verify external connectivity
+
+~~~powershell
+Test-NetConnection 1.1.1.1
+Resolve-DnsName microsoft.com
+Test-NetConnection microsoft.com -Port 443
+~~~
+
+## Step 5 — Inspect from HV01
+
+On HV01:
+
+~~~powershell
+Get-VMNetworkAdapter -VMName SRV01
+Test-NetConnection 172.22.0.20
+~~~
+
+## Connectivity matrix
+
+| Source | Destination | Expected |
+|---|---|---|
+| HV01 | SRV01 | Reachable |
+| SRV01 | HV01 / 172.22.0.1 | Reachable |
+| SRV01 | Internet IP | Reachable through NAT |
+| SRV01 | Public DNS name | Reachable if DNS is configured |
+
+---
+
+# Lab 2.6 — Create DC01
+
+Create a second Generation 2 VM.
+
+Suggested configuration:
+
+~~~text
+Name:        DC01
+vCPU:        2
+Startup RAM: 2 GB
+VHDX:        40 GB
+Switch:      vSW-Lab
+Guest IP:    172.22.0.10/24
+Gateway:     172.22.0.1
+~~~
+
+At this stage DC01 is only a Windows Server VM.
+
+Do not install AD DS or DNS unless the instructor explicitly chooses to extend the lab.
+
+Verify:
+
+~~~powershell
+Get-VM DC01
+Get-VMNetworkAdapter DC01
+Get-VMHardDiskDrive DC01
+~~~
+
+---
+
+# Module 10 — Operational comparison with other hypervisors
+
+The goal is not to teach another virtualization platform, but to help administrators map familiar concepts.
+
+| General virtualization concept | Hyper-V terminology |
+|---|---|
+| Hypervisor host | Hyper-V host |
+| VM configuration | Virtual machine |
+| Virtual CPU | Virtual processor |
+| Virtual disk | VHDX |
+| Virtual switch | Hyper-V Virtual Switch |
+| Snapshot-style point in time | Checkpoint |
+| Guest integration tools | Hyper-V Integration Services |
+| VM replication | Hyper-V Replica |
+| Host-to-host VM movement | Live Migration |
+
+### Operational differences to keep in mind
+
+- Hyper-V management is strongly integrated with Windows Server, PowerShell and Windows security.
+- Hyper-V networking uses Windows networking constructs and Hyper-V Virtual Switches.
+- Hyper-V storage commonly uses VHDX files stored on local disks, SMB shares, CSVs or other supported Windows storage architectures.
+- Generation 2 VMs use UEFI and Secure Boot rather than legacy BIOS.
+- Similar terminology across hypervisors does not always imply identical architecture or behavior.
+
+A deeper VMware-to-Hyper-V mapping is covered on Day 5.
+
+---
+
+# Break/Fix 2 — Virtual network failure
+
+## Scenario
+
+SRV01 was working earlier, but now it cannot reach the Internet and cannot reach the lab gateway.
+
+The instructor injects **one** fault.
+
+Possible instructor faults:
+
+- SRV01 connected to vSW-Private instead of vSW-Lab;
+- SRV01 virtual NIC disconnected;
+- wrong IPv4 subnet inside SRV01;
+- wrong default gateway;
+- LabNAT missing;
+- incorrect DNS server.
+
+Students are not told which fault was injected.
+
+## Troubleshooting rule
+
+Do not change configuration until the failure layer has been identified.
+
+## Step 1 — Check VM state
+
+~~~powershell
+Get-VM SRV01
+~~~
+
+## Step 2 — Check virtual networking
+
+~~~powershell
+Get-VMNetworkAdapter -VMName SRV01 | Select-Object VMName,SwitchName,Status,MacAddress
+Get-VMSwitch
+~~~
+
+## Step 3 — Check NAT and host-side lab adapter
+
+~~~powershell
+Get-NetIPAddress -InterfaceAlias "vEthernet (vSW-Lab)" -AddressFamily IPv4
+Get-NetNat
+~~~
+
+## Step 4 — Check guest networking
+
+Inside SRV01:
+
+~~~powershell
+Get-NetAdapter
+Get-NetIPConfiguration
+Get-NetRoute -AddressFamily IPv4
+Get-DnsClientServerAddress -AddressFamily IPv4
+~~~
+
+## Step 5 — Test one layer at a time
+
+Inside SRV01:
+
+~~~powershell
+Test-NetConnection 172.22.0.1
+Test-NetConnection 1.1.1.1
+Resolve-DnsName microsoft.com
+Test-NetConnection microsoft.com -Port 443
+~~~
+
+## Student conclusion
+
+Before applying a fix, report:
+
+- observed symptom;
+- layer where the failure occurs;
+- evidence;
+- proposed root cause;
+- intended corrective action.
+
+## Validation after correction
+
+Repeat the connectivity matrix and verify that the expected paths work again.
+
+---
+
+# Day 2 review questions
+
+Students should be able to answer:
+
+1. Why is Hyper-V considered a Type-1 hypervisor?
+2. What is the role of the root partition?
+3. What is a child partition?
+4. What purpose does VMBus serve?
+5. What is the relationship between a VSP and a VSC?
+6. Why is Generation 2 preferred for new Windows Server 2025 VMs?
+7. Why does assigning more vCPUs not always improve performance?
+8. What is the difference between Startup, Minimum and Maximum RAM with Dynamic Memory?
+9. What is the difference between an External, Internal and Private switch?
+10. Why does this nested lab use Internal switch + NAT instead of an External switch?
+11. What is the role of the VHDX file?
+12. Why should VM files and virtual disks use predictable storage paths?
+13. Which checks distinguish an IP problem from a DNS problem?
+14. What evidence proves which vSwitch a VM is connected to?
+
+---
+
+# End-of-day validation checklist
+
+- [ ] Hyper-V role installed on HV01.
+- [ ] VMMS running.
+- [ ] Hyper-V Manager operational.
+- [ ] Hyper-V architecture understood at a high level.
+- [ ] Root and child partitions can be explained.
+- [ ] VMBus/VSP/VSC concept understood.
+- [ ] Generation 1 vs Generation 2 understood.
+- [ ] vSW-Lab created as Internal.
+- [ ] LabNAT configured for 172.22.0.0/24.
+- [ ] vSW-Private created for comparison.
+- [ ] SRV01 created as Generation 2.
+- [ ] SRV01 configured with 2 vCPUs.
+- [ ] Dynamic Memory configured and understood.
+- [ ] SRV01 VHDX stored under the course storage path.
+- [ ] Secure Boot inspected.
+- [ ] Windows Server 2025 installed in SRV01.
+- [ ] SRV01 configured with static IPv4.
+- [ ] HV01-to-SRV01 connectivity verified.
+- [ ] SRV01 outbound IP connectivity verified.
+- [ ] SRV01 DNS resolution verified.
+- [ ] SRV01 TCP/443 connectivity verified.
+- [ ] DC01 created.
+- [ ] Virtual-network break/fix exercise completed using evidence.
+- [ ] Students can map basic virtualization concepts to Hyper-V terminology.
+
+---
+
+# Microsoft references
+
+- Hyper-V overview: https://learn.microsoft.com/windows-server/virtualization/hyper-v/overview
+- Hyper-V architecture: https://learn.microsoft.com/windows-server/virtualization/hyper-v/architecture
+- Hyper-V terminology and features: https://learn.microsoft.com/windows-server/virtualization/hyper-v/features-terminology
+- Install Hyper-V: https://learn.microsoft.com/windows-server/virtualization/hyper-v/get-started/install-hyper-v
+- Create a virtual machine: https://learn.microsoft.com/windows-server/virtualization/hyper-v/get-started/create-a-virtual-machine-in-hyper-v
+- VM generations: https://learn.microsoft.com/windows-server/virtualization/hyper-v/plan/should-i-create-a-generation-1-or-2-virtual-machine-in-hyper-v
+- Dynamic Memory: https://learn.microsoft.com/windows-server/virtualization/hyper-v/dynamic-memory
+- Virtual switches: https://learn.microsoft.com/windows-server/virtualization/hyper-v/get-started/create-a-virtual-switch-for-hyper-v-virtual-machines
+- Nested virtualization: https://learn.microsoft.com/windows-server/virtualization/hyper-v/enable-nested-virtualization
