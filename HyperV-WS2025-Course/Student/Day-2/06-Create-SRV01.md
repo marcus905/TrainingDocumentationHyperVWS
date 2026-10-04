@@ -1,5 +1,9 @@
 # Module 06 — Create SRV01
 
+## Introduction
+
+SRV01 is the main workload VM for the rest of the course. Rather than accepting wizard defaults, this module deliberately applies the CPU, Dynamic Memory, storage, firmware, and network decisions discussed earlier.
+
 ## Specification
 
 - Generation 2
@@ -16,3 +20,27 @@ Set-VMMemory SRV01 -DynamicMemoryEnabled $true -MinimumBytes 1GB -StartupBytes 2
 ~~~
 
 Inspect with `Get-VM`, `Get-VMProcessor`, `Get-VMMemory`, `Get-VMNetworkAdapter`, `Get-VMHardDiskDrive` and `Get-VMFirmware`.
+
+## Concepts to keep in mind
+
+VM configuration and guest configuration are separate layers. Hyper-V defines virtual hardware; Windows inside the VM later configures its own IP addressing, disks, services, and applications.
+
+
+## What you will do
+
+Create SRV01 as Generation 2, set two vCPUs and Dynamic Memory boundaries, connect it to vSW-Lab, and inspect its firmware, disks, memory, and vNIC before installing the OS.
+
+
+## What you should observe
+
+At this point SRV01 exists as virtual hardware but has no installed operating system. Hyper-V can still report all of its configured resources.
+
+
+## Validation checkpoint
+
+Verify generation, vCPU count, Dynamic Memory values, VHDX path, vSwitch, and Secure Boot state.
+
+
+## Expected end state
+
+SRV01 has a known and documented virtual-hardware baseline ready for guest installation.
