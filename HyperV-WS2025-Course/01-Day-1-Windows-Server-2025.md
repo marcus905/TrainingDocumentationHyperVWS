@@ -16,6 +16,525 @@ By the end of Day 1, students should be able to:
 
 ---
 
+# Module 0 — PowerShell Essentials for the Course
+
+## Why PowerShell matters in this course
+
+PowerShell will be used throughout the course to inspect, configure and troubleshoot Windows Server and Hyper-V.
+
+The goal of this module is not to teach PowerShell scripting in depth. Students only need a practical foundation that will make the later labs easier to follow.
+
+By the end of this section, students should be comfortable with:
+
+- the Verb-Noun command naming convention;
+- discovering commands;
+- reading command help;
+- understanding that PowerShell works with objects rather than plain text;
+- using the pipeline;
+- filtering and selecting data;
+- using variables;
+- previewing administrative changes with WhatIf;
+- identifying which PowerShell edition they are running.
+
+---
+
+## Windows PowerShell 5.1 vs PowerShell 7
+
+Windows PowerShell and PowerShell are separate products.
+
+**Windows PowerShell 5.1**
+
+- ships with Windows;
+- runs on the full .NET Framework;
+- is Windows-only;
+- is launched with powershell.exe;
+- remains important for some Windows Server management modules.
+
+**PowerShell 7**
+
+- is installed separately;
+- runs side-by-side with Windows PowerShell 5.1;
+- is based on modern .NET;
+- is cross-platform;
+- is launched with pwsh.exe;
+- can use many Windows PowerShell modules directly, while other modules may require Windows PowerShell Compatibility.
+
+For this course, use **Windows PowerShell 5.1 by default unless the instructor explicitly asks you to use PowerShell 7**.
+
+This keeps the Windows Server and Hyper-V labs consistent and avoids unexpected module-compatibility differences.
+
+References:
+
+- https://learn.microsoft.com/powershell/scripting/windows-powershell/overview
+- https://learn.microsoft.com/powershell/scripting/install/install-powershell-on-windows
+- https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_windows_powershell_compatibility
+
+### Identify the current shell
+
+Run:
+
+~~~powershell
+$PSVersionTable
+~~~
+
+Important fields:
+
+- PSVersion;
+- PSEdition.
+
+In Windows PowerShell 5.1, PSEdition normally reports:
+
+~~~text
+Desktop
+~~~
+
+In PowerShell 7, it normally reports:
+
+~~~text
+Core
+~~~
+
+A concise view:
+
+~~~powershell
+$PSVersionTable | Select-Object PSVersion,PSEdition
+~~~
+
+### Check which executable started the session
+
+Windows PowerShell:
+
+~~~text
+powershell.exe
+~~~
+
+PowerShell 7:
+
+~~~text
+pwsh.exe
+~~~
+
+If PowerShell 7 is installed, both shells can exist on the same server.
+
+---
+
+## Cmdlets and the Verb-Noun convention
+
+Most PowerShell commands follow this pattern:
+
+~~~text
+Verb-Noun
+~~~
+
+Examples:
+
+~~~powershell
+Get-Service
+Get-Process
+Get-NetAdapter
+Get-Volume
+Start-Service
+Stop-Service
+~~~
+
+The verb describes the action and the noun describes the managed object.
+
+This naming model makes commands easier to discover.
+
+---
+
+## Discover commands with Get-Command
+
+Find commands related to network adapters:
+
+~~~powershell
+Get-Command *NetAdapter*
+~~~
+
+Find commands using a particular verb:
+
+~~~powershell
+Get-Command -Verb Get
+~~~
+
+Find commands from a module:
+
+~~~powershell
+Get-Command -Module NetTCPIP
+~~~
+
+### Teaching point
+
+If you remember the technology but not the exact cmdlet, command discovery is often faster and safer than guessing.
+
+---
+
+## Read help with Get-Help
+
+Display help for a cmdlet:
+
+~~~powershell
+Get-Help Get-NetAdapter
+~~~
+
+Show examples:
+
+~~~powershell
+Get-Help Get-NetAdapter -Examples
+~~~
+
+Show detailed help:
+
+~~~powershell
+Get-Help Get-NetAdapter -Detailed
+~~~
+
+If help content is incomplete, administrative systems can update it with:
+
+~~~powershell
+Update-Help
+~~~
+
+Internet access and permissions may be required.
+
+---
+
+## PowerShell returns objects
+
+Run:
+
+~~~powershell
+Get-Service
+~~~
+
+PowerShell does not simply return formatted text. It returns service objects with properties.
+
+Inspect one service:
+
+~~~powershell
+Get-Service | Select-Object -First 1 | Format-List *
+~~~
+
+This exposes properties that can be filtered, sorted and selected.
+
+### Why this matters
+
+Later in the course, commands such as Get-VM, Get-NetAdapter and Get-Disk return objects representing real system resources.
+
+---
+
+## The pipeline
+
+The pipeline character is:
+
+~~~text
+|
+~~~
+
+It sends objects from one command to another.
+
+Example:
+
+~~~powershell
+Get-Service | Where-Object Status -eq "Running"
+~~~
+
+This means:
+
+1. Get-Service retrieves service objects.
+2. Where-Object keeps only services whose Status is Running.
+
+Select specific properties:
+
+~~~powershell
+Get-Service |
+    Where-Object Status -eq "Running" |
+    Select-Object Name,Status
+~~~
+
+Sort the results:
+
+~~~powershell
+Get-Service |
+    Where-Object Status -eq "Running" |
+    Sort-Object Name |
+    Select-Object Name,Status
+~~~
+
+### Course connection
+
+The same pattern will later be used with:
+
+~~~powershell
+Get-WindowsFeature | Where-Object Installed
+~~~
+
+and:
+
+~~~powershell
+Get-NetRoute |
+    Where-Object DestinationPrefix -eq "0.0.0.0/0"
+~~~
+
+---
+
+## Select-Object
+
+Select only the properties you need:
+
+~~~powershell
+Get-NetAdapter |
+    Select-Object Name,Status,LinkSpeed,MacAddress
+~~~
+
+This is useful when a command returns much more information than is relevant to the current task.
+
+---
+
+## Where-Object
+
+Filter objects:
+
+~~~powershell
+Get-Service |
+    Where-Object Status -eq "Stopped"
+~~~
+
+A more explicit form is:
+
+~~~powershell
+Get-Service |
+    Where-Object { $_.Status -eq "Stopped" }
+~~~
+
+The shorter syntax is sufficient for simple property comparisons.
+
+The $_ variable in the script-block syntax represents the current object passing through the pipeline.
+
+---
+
+## Variables
+
+Variables start with the dollar sign.
+
+Example:
+
+~~~powershell
+$ServerName = "HV01"
+$ServerName
+~~~
+
+Use the variable:
+
+~~~powershell
+Write-Host "Server name is $ServerName"
+~~~
+
+Variables help avoid repeatedly typing the same values.
+
+Example:
+
+~~~powershell
+$Interface = "Ethernet"
+
+Get-NetIPConfiguration -InterfaceAlias $Interface
+Get-DnsClientServerAddress -InterfaceAlias $Interface
+~~~
+
+---
+
+## Formatting output
+
+Table view:
+
+~~~powershell
+Get-Service | Format-Table Name,Status
+~~~
+
+List view:
+
+~~~powershell
+Get-Service -Name WinRM | Format-List *
+~~~
+
+### Important note
+
+Format-Table and Format-List are intended for presentation.
+
+Avoid placing additional data-processing commands after formatting cmdlets because the formatting operation changes the objects being passed through the pipeline.
+
+Prefer:
+
+~~~powershell
+Get-Service |
+    Where-Object Status -eq "Running" |
+    Select-Object Name,Status |
+    Format-Table
+~~~
+
+rather than formatting early in the pipeline.
+
+---
+
+## Tab completion
+
+PowerShell supports tab completion.
+
+Start typing:
+
+~~~text
+Get-NetA
+~~~
+
+then press Tab.
+
+PowerShell can complete:
+
+- cmdlet names;
+- parameters;
+- some parameter values;
+- file paths.
+
+Students are encouraged to use tab completion rather than typing long command names from memory.
+
+---
+
+## Administrative privileges
+
+Many commands that change Windows configuration require an elevated shell.
+
+The PowerShell window should be started using:
+
+**Run as administrator**
+
+Commands that only retrieve information often work without elevation, while configuration commands may return access-denied or privilege-related errors.
+
+---
+
+## Preview changes with WhatIf
+
+Many administrative cmdlets support the WhatIf common parameter.
+
+Example:
+
+~~~powershell
+Install-WindowsFeature Telnet-Client -WhatIf
+~~~
+
+WhatIf shows what the command intends to do without making the change.
+
+This is a useful safety habit for administrative work.
+
+Not every cmdlet supports WhatIf, so always check command help when unsure.
+
+---
+
+## Confirm behavior
+
+Some commands can request confirmation before making a change.
+
+The common Confirm parameter can be used where supported:
+
+~~~powershell
+Remove-Item C:\Temp\Example.txt -Confirm
+~~~
+
+Do not run destructive examples during the course unless specifically instructed.
+
+---
+
+## Reading errors
+
+When a command fails, read the error before changing anything.
+
+Look for:
+
+- the cmdlet that failed;
+- the object or parameter involved;
+- permission errors;
+- invalid parameter values;
+- missing resources;
+- connectivity failures.
+
+Example:
+
+~~~powershell
+Get-Service -Name "ThisServiceDoesNotExist"
+~~~
+
+The resulting error clearly indicates that the specified service cannot be found.
+
+### Troubleshooting principle
+
+An error message is evidence.
+
+Do not immediately retry the same command without understanding why it failed.
+
+---
+
+## Mini exercise — Build a simple pipeline
+
+### Task 1
+
+List all services:
+
+~~~powershell
+Get-Service
+~~~
+
+### Task 2
+
+Show only running services:
+
+~~~powershell
+Get-Service |
+    Where-Object Status -eq "Running"
+~~~
+
+### Task 3
+
+Display only service name and status:
+
+~~~powershell
+Get-Service |
+    Where-Object Status -eq "Running" |
+    Select-Object Name,Status
+~~~
+
+### Task 4
+
+Sort the list by name:
+
+~~~powershell
+Get-Service |
+    Where-Object Status -eq "Running" |
+    Sort-Object Name |
+    Select-Object Name,Status
+~~~
+
+### Validation
+
+Students should be able to explain what each stage of the pipeline does.
+
+---
+
+## PowerShell primer checkpoint
+
+Before continuing, students should be able to answer:
+
+1. What is the difference between powershell.exe and pwsh.exe?
+2. What does $PSVersionTable show?
+3. What does Get-Command help you discover?
+4. What does Get-Help -Examples provide?
+5. What travels through a PowerShell pipeline?
+6. What does Where-Object do?
+7. What does Select-Object do?
+8. What does the $_ variable represent?
+9. Why is WhatIf useful?
+10. Why should error messages be treated as troubleshooting evidence?
+
+---
+
 # Module 1 — Windows Server 2025 architecture and installation options
 
 ## Concepts
