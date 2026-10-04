@@ -333,9 +333,43 @@ Recovery has been validated
 
 HV02 provides the recovery-side Hyper-V host used for Replica demonstrations.
 
-# Lab 3.3 — Install and validate Hyper-V on HV02
+# Lab 3.3 — Prepare HV02 as the recovery host
+
+HV02 was created on Day 0 with:
+
+- outer management IP 192.168.240.12/24;
+- a dedicated approximately 200 GB raw data disk;
+- nested virtualization enabled.
+
+Day 3 now completes the recovery-host preparation.
+
+## Step 1 — Initialize the HV02 data disk
 
 On HV02:
+
+~~~powershell
+Get-Disk
+~~~
+
+Identify the approximately 200 GB raw training disk.
+
+Do not assume it is always Disk 1.
+
+For the example below, replace <DiskNumber> with the verified training-disk number:
+
+~~~powershell
+Initialize-Disk -Number <DiskNumber> -PartitionStyle GPT
+New-Partition -DiskNumber <DiskNumber> -UseMaximumSize -DriveLetter D
+Format-Volume -DriveLetter D -FileSystem NTFS -NewFileSystemLabel "Hyper-V Data" -Confirm:$false
+~~~
+
+Verify:
+
+~~~powershell
+Get-Volume -DriveLetter D
+~~~
+
+## Step 2 — Install Hyper-V
 
 ~~~powershell
 Install-WindowsFeature -Name Hyper-V -IncludeManagementTools -Restart
@@ -349,33 +383,60 @@ Get-Service vmms
 Get-VMHost
 ~~~
 
-Create or confirm storage paths:
+## Step 3 — Create recovery-host storage paths
 
 ~~~powershell
 New-Item -ItemType Directory -Path "D:\Hyper-V\VMs" -Force
 New-Item -ItemType Directory -Path "D:\Hyper-V\VHDX" -Force
 New-Item -ItemType Directory -Path "D:\Hyper-V\Replica" -Force
+New-Item -ItemType Directory -Path "D:\Hyper-V\Export" -Force
 Set-VMHost -VirtualMachinePath "D:\Hyper-V\VMs" -VirtualHardDiskPath "D:\Hyper-V\VHDX"
 ~~~
 
-## Verify host-to-host connectivity
+## Step 4 — Create the recovery-side workload network
 
-HV01 and HV02 must be able to reach each other on their outer management network.
+HV02 should provide the same workload network name used on HV01 so a recovered VM can map cleanly to the expected switch.
 
-Record the actual management addresses used in your lab:
-
-~~~text
-HV01 management IP: __________________
-HV02 management IP: __________________
-~~~
-
-Verify from each host:
+On HV02:
 
 ~~~powershell
-Test-NetConnection <other-host-IP>
+New-VMSwitch -Name "vSW-Lab" -SwitchType Internal
+New-NetIPAddress -InterfaceAlias "vEthernet (vSW-Lab)" -IPAddress 172.22.0.1 -PrefixLength 24
+New-NetNat -Name "LabNAT" -InternalIPInterfaceAddressPrefix "172.22.0.0/24"
 ~~~
 
-For Replica, name resolution must match the authentication design.
+Verify:
+
+~~~powershell
+Get-VMSwitch -Name "vSW-Lab"
+Get-NetIPAddress -InterfaceAlias "vEthernet (vSW-Lab)" -AddressFamily IPv4
+Get-NetNat -Name "LabNAT"
+~~~
+
+HV01 and HV02 each have their own isolated 172.22.0.0/24 nested network. They do not share Layer-2 connectivity.
+
+## Step 5 — Verify outer host-to-host connectivity
+
+The deterministic Day 0 management addresses are:
+
+~~~text
+HV01: 192.168.240.11
+HV02: 192.168.240.12
+~~~
+
+From HV01:
+
+~~~powershell
+Test-NetConnection 192.168.240.12
+~~~
+
+From HV02:
+
+~~~powershell
+Test-NetConnection 192.168.240.11
+~~~
+
+For Replica, host-name resolution must match the certificate identities prepared in the next lab.
 
 ---
 
@@ -434,7 +495,7 @@ TCP 443
 
 Required when hosts are not domain joined or are in untrusted domains, and also provides encrypted replication traffic.
 
-Our course hosts are standalone, so the lab uses the **certificate/HTTPS design**.
+Our course hosts are standalone, so the lab uses the **certificate/HTTPS design** created locally in Lab 3.4.
 
 A valid Replica certificate must:
 
@@ -454,59 +515,156 @@ https://learn.microsoft.com/windows-server/virtualization/hyper-v/configure-repl
 
 ## Objective
 
-Prepare trusted host identities for HTTPS-based Hyper-V Replica.
+Create a reproducible **lab-only PKI** for certificate-based Hyper-V Replica between the standalone HV01 and HV02 hosts.
 
-This lab assumes the instructor provides or prepares valid lab certificates before Replica is enabled.
+Production environments should use certificates issued by an organization's trusted PKI. The self-signed lab CA below exists only so every student can build the same isolated training environment locally.
 
-Recommended lab names:
+Recommended host names:
 
 ~~~text
 hv01.lab.local
 hv02.lab.local
 ~~~
 
-Each host certificate must match its host FQDN and meet the Microsoft Replica certificate requirements.
+## Step 1 — Add deterministic host-name mappings
 
-## Step 1 — Verify name resolution
-
-From HV01:
+On HV01, open an elevated PowerShell session:
 
 ~~~powershell
-Resolve-DnsName hv02.lab.local
+Add-Content -Path "$env:SystemRoot\System32\drivers\etc\hosts" -Value "192.168.240.12 hv02.lab.local"
 ~~~
 
-From HV02:
+On HV02:
+
+~~~powershell
+Add-Content -Path "$env:SystemRoot\System32\drivers\etc\hosts" -Value "192.168.240.11 hv01.lab.local"
+~~~
+
+Verify:
 
 ~~~powershell
 Resolve-DnsName hv01.lab.local
+Resolve-DnsName hv02.lab.local
 ~~~
 
-If the lab does not provide DNS for these names, the instructor may provide temporary hosts-file mappings for the course environment.
+Each host only needs to resolve the peer correctly.
 
-## Step 2 — Inspect the computer certificate store
+## Step 2 — Create lab certificates on the physical Windows 11 host
+
+On the physical Windows 11 host, create a folder:
+
+~~~powershell
+New-Item -ItemType Directory -Path "C:\HyperV-Course\ReplicaCerts" -Force
+~~~
+
+Create a self-signed lab root CA:
+
+~~~powershell
+$RootCA = New-SelfSignedCertificate -Type Custom -Subject "CN=HyperV-Course-Lab-RootCA" -KeyUsage CertSign,CRLSign,DigitalSignature -KeyAlgorithm RSA -KeyLength 2048 -HashAlgorithm SHA256 -CertStoreLocation "Cert:\CurrentUser\My" -TextExtension @("2.5.29.19={critical}{text}ca=1")
+~~~
+
+Create the HV01 Replica certificate:
+
+~~~powershell
+$HV01Cert = New-SelfSignedCertificate -Type Custom -Subject "CN=hv01.lab.local" -DnsName "hv01.lab.local" -Signer $RootCA -KeyAlgorithm RSA -KeyLength 2048 -HashAlgorithm SHA256 -KeyExportPolicy Exportable -CertStoreLocation "Cert:\CurrentUser\My" -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.1,1.3.6.1.5.5.7.3.2")
+~~~
+
+Create the HV02 Replica certificate:
+
+~~~powershell
+$HV02Cert = New-SelfSignedCertificate -Type Custom -Subject "CN=hv02.lab.local" -DnsName "hv02.lab.local" -Signer $RootCA -KeyAlgorithm RSA -KeyLength 2048 -HashAlgorithm SHA256 -KeyExportPolicy Exportable -CertStoreLocation "Cert:\CurrentUser\My" -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.1,1.3.6.1.5.5.7.3.2")
+~~~
+
+The host certificates include both Server Authentication and Client Authentication EKUs.
+
+## Step 3 — Export the lab root and host certificates
+
+Use a temporary **lab-only** PFX password chosen by the student:
+
+~~~powershell
+$PfxPassword = Read-Host "Enter a temporary lab PFX password" -AsSecureString
+
+Export-Certificate -Cert $RootCA -FilePath "C:\HyperV-Course\ReplicaCerts\HyperV-Course-Lab-RootCA.cer"
+
+Export-PfxCertificate -Cert $HV01Cert -FilePath "C:\HyperV-Course\ReplicaCerts\HV01-Replica.pfx" -Password $PfxPassword
+Export-PfxCertificate -Cert $HV02Cert -FilePath "C:\HyperV-Course\ReplicaCerts\HV02-Replica.pfx" -Password $PfxPassword
+~~~
+
+Do not reuse a production password.
+
+## Step 4 — Enable Guest Service Interface for HV01 and HV02
+
+Still on the physical Windows 11 host:
+
+~~~powershell
+Enable-VMIntegrationService -VMName "HV01" -Name "Guest Service Interface"
+Enable-VMIntegrationService -VMName "HV02" -Name "Guest Service Interface"
+~~~
+
+## Step 5 — Copy certificates into the outer hosts
+
+Copy the root and HV01 PFX into HV01:
+
+~~~powershell
+Copy-VMFile -Name "HV01" -SourcePath "C:\HyperV-Course\ReplicaCerts\HyperV-Course-Lab-RootCA.cer" -DestinationPath "C:\ReplicaCerts\HyperV-Course-Lab-RootCA.cer" -FileSource Host -CreateFullPath
+Copy-VMFile -Name "HV01" -SourcePath "C:\HyperV-Course\ReplicaCerts\HV01-Replica.pfx" -DestinationPath "C:\ReplicaCerts\HV01-Replica.pfx" -FileSource Host -CreateFullPath
+~~~
+
+Copy the root and HV02 PFX into HV02:
+
+~~~powershell
+Copy-VMFile -Name "HV02" -SourcePath "C:\HyperV-Course\ReplicaCerts\HyperV-Course-Lab-RootCA.cer" -DestinationPath "C:\ReplicaCerts\HyperV-Course-Lab-RootCA.cer" -FileSource Host -CreateFullPath
+Copy-VMFile -Name "HV02" -SourcePath "C:\HyperV-Course\ReplicaCerts\HV02-Replica.pfx" -DestinationPath "C:\ReplicaCerts\HV02-Replica.pfx" -FileSource Host -CreateFullPath
+~~~
+
+## Step 6 — Import the root and host certificate on HV01
+
+On HV01:
+
+~~~powershell
+Import-Certificate -FilePath "C:\ReplicaCerts\HyperV-Course-Lab-RootCA.cer" -CertStoreLocation "Cert:\LocalMachine\Root"
+$PfxPassword = Read-Host "Enter the lab PFX password" -AsSecureString
+Import-PfxCertificate -FilePath "C:\ReplicaCerts\HV01-Replica.pfx" -CertStoreLocation "Cert:\LocalMachine\My" -Password $PfxPassword
+~~~
+
+## Step 7 — Import the root and host certificate on HV02
+
+On HV02:
+
+~~~powershell
+Import-Certificate -FilePath "C:\ReplicaCerts\HyperV-Course-Lab-RootCA.cer" -CertStoreLocation "Cert:\LocalMachine\Root"
+$PfxPassword = Read-Host "Enter the lab PFX password" -AsSecureString
+Import-PfxCertificate -FilePath "C:\ReplicaCerts\HV02-Replica.pfx" -CertStoreLocation "Cert:\LocalMachine\My" -Password $PfxPassword
+~~~
+
+## Step 8 — Verify certificate properties
 
 On each host:
 
 ~~~powershell
-Get-ChildItem Cert:\LocalMachine\My | Select-Object Subject,Thumbprint,NotAfter,HasPrivateKey
+Get-ChildItem Cert:\LocalMachine\My |
+    Where-Object Subject -like "*lab.local*" |
+    Select-Object Subject,DnsNameList,Thumbprint,NotAfter,HasPrivateKey,EnhancedKeyUsageList
 ~~~
 
-Locate the certificate whose subject/SAN matches the local host FQDN.
+Verify:
 
-## Step 3 — Record certificate thumbprints
+- the local host certificate has a private key;
+- the DNS name matches the local host FQDN;
+- the certificate is not expired;
+- both Client Authentication and Server Authentication are present;
+- the issuing lab root is trusted.
+
+Record the thumbprints:
 
 ~~~text
 HV01 certificate thumbprint: ______________________________
 HV02 certificate thumbprint: ______________________________
 ~~~
 
-## Step 4 — Verify trust
+Microsoft reference:
 
-The issuing root CA must exist in the Local Computer Trusted Root Certification Authorities store on both hosts.
-
-The instructor should validate the lab certificate chain before students continue.
-
-> Certificate creation is treated as lab preparation rather than the primary learning objective. The Hyper-V objective is to understand why certificate identity and trust are required for standalone-host Replica.
+https://learn.microsoft.com/windows-server/virtualization/hyper-v/configure-replication-single-host
 
 ---
 
@@ -1315,7 +1473,10 @@ Students should be able to answer:
 - [ ] Backup/restore validation concept understood.
 - [ ] HV02 running Hyper-V.
 - [ ] HV01 and HV02 management connectivity verified.
+- [ ] HV02 data disk initialized and Hyper-V storage paths created.
+- [ ] HV02 vSW-Lab and LabNAT created.
 - [ ] Standalone-host Replica authentication model understood.
+- [ ] Lab root and HV01/HV02 Replica certificates created and imported.
 - [ ] HV02 enabled as Replica server.
 - [ ] Replica connectivity tested.
 - [ ] SRV01 initial replication completed.
