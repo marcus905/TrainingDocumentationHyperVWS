@@ -8,6 +8,16 @@ A newly installed server should be inspected before it is changed. The purpose o
 
 Inspect and validate a newly deployed Windows Server host.
 
+## Concepts to keep in mind
+
+Configuration work is safer when you can describe the current state first. Server identity, time, DNS, routing, WinRM, and Event Log availability affect many later technologies.
+
+## What you will do
+
+Inspect the current state with PowerShell, then locate the same information through the GUI to understand both management surfaces.
+
+## Hands-on / detailed content
+
 ~~~powershell
 Get-ComputerInfo
 hostname.exe
@@ -22,11 +32,6 @@ Get-Service EventLog,WinRM,W32Time
 
 Use Server Manager, Computer Management, Services and Event Viewer to locate the same information through the GUI.
 
-
-## Concepts to keep in mind
-
-Configuration work is safer when you can describe the current state first. Server identity, time, DNS, routing, WinRM, and Event Log availability affect many later technologies.
-
 ## Validation
 
 - [ ] Host identity confirmed.
@@ -38,17 +43,10 @@ Configuration work is safer when you can describe the current state first. Serve
 
 Compare the same information in PowerShell and GUI tools and notice which view is faster for inspection versus exploration.
 
-
 ## Validation checkpoint
 
 Confirm host name, time/time zone, network configuration, default route, DNS, and the state of EventLog, WinRM, and W32Time.
 
-
 ## Expected end state
 
 HV01 has a documented basic operating-system baseline before roles or storage are changed.
-
-
-## What you will do
-
-Inspect the current state with PowerShell, then locate the same information through the GUI to understand both management surfaces.
