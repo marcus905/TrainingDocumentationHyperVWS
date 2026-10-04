@@ -51,3 +51,8 @@ Validate IP address, prefix, gateway, DNS, and removal of the outer virtual DVD 
 ## Expected end state
 
 Both outer hosts boot with deterministic management networking and drive D: is free for the training data disk.
+
+
+## What you will do
+
+Install Windows Server on both outer VMs, configure their deterministic management addresses, verify gateway/DNS connectivity, then remove the installation DVD devices so D: remains available.
