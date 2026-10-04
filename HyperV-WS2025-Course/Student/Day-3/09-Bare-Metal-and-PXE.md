@@ -8,6 +8,16 @@ Not every Hyper-V environment starts with manually installed hosts. This module 
 
 Understand the deployment flow without building a full deployment infrastructure.
 
+## Concepts to keep in mind
+
+PXE boot crosses several dependencies: firmware/UEFI, DHCP, network reachability, a PXE responder, boot files, WinPE, and the deployment/image workflow.
+
+## What you will do
+
+Walk through the boot chain and identify which component is responsible for address assignment, network boot response, preinstallation environment, and operating-system deployment.
+
+## Hands-on / detailed content
+
 ~~~text
 UEFI/PXE
    |
@@ -26,26 +36,13 @@ Discuss DHCP, network boot, UEFI considerations, Windows Deployment Services and
 
 The course does not build a complete WDS/PXE lab. The objective is recognizing the components and troubleshooting dependencies.
 
-
-## Concepts to keep in mind
-
-PXE boot crosses several dependencies: firmware/UEFI, DHCP, network reachability, a PXE responder, boot files, WinPE, and the deployment/image workflow.
-
-
-## What you will do
-
-Walk through the boot chain and identify which component is responsible for address assignment, network boot response, preinstallation environment, and operating-system deployment.
-
-
 ## What you should observe
 
 A failure before WinPE and a failure during image deployment occur at different layers and require different evidence.
 
-
 ## Validation checkpoint
 
 Given a 'PXE boot failed' symptom, list the first three dependencies you would verify and why.
-
 
 ## Expected end state
 
