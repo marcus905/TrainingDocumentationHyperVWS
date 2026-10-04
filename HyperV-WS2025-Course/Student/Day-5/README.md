@@ -1,13 +1,16 @@
 # Day 5 — Migration, Operations and Capstone
 
+## Introduction
+
+Day 5 brings the course together. Instead of learning another isolated Hyper-V feature, you will use the environment as an operational system: troubleshoot across layers, assess migrations, standardize configuration, review security, and complete a multi-fault capstone.
 
 ## Concepts to keep in mind
 
 The capstone mindset is broader than configuration. A production-ready virtualization environment must be understandable, recoverable, documented, secure enough for its role, and supportable by someone other than the person who built it.
 
-## Introduction
+## What you will do
 
-Day 5 brings the course together. Instead of learning another isolated Hyper-V feature, you will use the environment as an operational system: troubleshoot across layers, assess migrations, standardize configuration, review security, and complete a multi-fault capstone.
+Work through the conceptual modules as operational decision exercises, then apply them during the final capstone and collective debrief.
 
 ## Sequence
 
@@ -23,21 +26,13 @@ Day 5 brings the course together. Instead of learning another isolated Hyper-V f
 
 Day 5 is the capstone: operate the environment as a system, not as isolated features.
 
-
-## What you will do
-
-Work through the conceptual modules as operational decision exercises, then apply them during the final capstone and collective debrief.
-
-
 ## What you should observe
 
 Many Day 5 questions do not have a single command as the answer; they require weighing dependencies, risk, rollback, recovery, and evidence.
 
-
 ## Validation checkpoint
 
 Use the operational-readiness and final-capstone modules to demonstrate that the environment can be operated, not just configured.
-
 
 ## Expected end state
 
