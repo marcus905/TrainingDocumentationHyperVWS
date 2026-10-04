@@ -20,6 +20,11 @@ Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses 1.1.1.1
 
 Validate gateway, Internet IP, DNS and HTTPS connectivity.
 
+
+## Goal
+
+Install Windows Server in SRV01, attach its additional data disk, configure guest networking, and validate connectivity across the nested lab.
+
 ## Concepts to keep in mind
 
 Attaching a VHDX to a VM does not initialize it inside Windows, and connecting a vNIC to a switch does not assign a guest IP. The hypervisor and guest layers must both be configured and verified.
