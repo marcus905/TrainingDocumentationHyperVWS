@@ -823,16 +823,18 @@ Repeat the Day 2 connectivity matrix after reset.
 
 ## Part A — Create the fault
 
-Create a disposable VM configuration with a missing disk dependency:
+Create a disposable VM with a valid attached disk first:
 
 ~~~powershell
 New-VM -Name "BROKEN01" -Generation 2 -MemoryStartupBytes 1GB -Path "D:\Hyper-V\VMs" -NoVHD
+New-VHD -Path "D:\Hyper-V\VHDX\BROKEN01-DISK.vhdx" -SizeBytes 2GB -Dynamic
+Add-VMHardDiskDrive -VMName "BROKEN01" -Path "D:\Hyper-V\VHDX\BROKEN01-DISK.vhdx"
 ~~~
 
-Attach a deliberately nonexistent VHDX path:
+Now create the fault by moving the VHDX outside the path stored in the VM configuration:
 
 ~~~powershell
-Add-VMHardDiskDrive -VMName "BROKEN01" -Path "D:\Hyper-V\VHDX\MISSING-DISK.vhdx"
+Move-Item "D:\Hyper-V\VHDX\BROKEN01-DISK.vhdx" "D:\Hyper-V\VHDX\BROKEN01-DISK.moved"
 ~~~
 
 Attempt to start it:
@@ -841,7 +843,7 @@ Attempt to start it:
 Start-VM BROKEN01
 ~~~
 
-The start operation should fail because the storage dependency is invalid.
+The start operation should fail because the VM configuration still references BROKEN01-DISK.vhdx, but that file is no longer present.
 
 ## Part B — Incident symptom
 
@@ -1426,11 +1428,18 @@ Measure-VMReplication SRV01
 
 #### Break recipe
 
-Create a disposable VM with an invalid disk reference:
+Create a disposable VM and attach a real disk:
 
 ~~~powershell
 New-VM -Name "BROKEN01" -Generation 2 -MemoryStartupBytes 1GB -Path "D:\Hyper-V\VMs" -NoVHD
-Add-VMHardDiskDrive -VMName "BROKEN01" -Path "D:\Hyper-V\VHDX\MISSING-DISK.vhdx"
+New-VHD -Path "D:\Hyper-V\VHDX\BROKEN01-DISK.vhdx" -SizeBytes 2GB -Dynamic
+Add-VMHardDiskDrive -VMName "BROKEN01" -Path "D:\Hyper-V\VHDX\BROKEN01-DISK.vhdx"
+~~~
+
+Move the disk so the VM configuration points to a file that no longer exists:
+
+~~~powershell
+Move-Item "D:\Hyper-V\VHDX\BROKEN01-DISK.vhdx" "D:\Hyper-V\VHDX\BROKEN01-DISK.moved"
 Start-VM BROKEN01
 ~~~
 
@@ -1441,7 +1450,12 @@ Start-VM BROKEN01
 #### Reset
 
 ~~~powershell
+if (Test-Path "D:\Hyper-V\VHDX\BROKEN01-DISK.moved") {
+    Move-Item "D:\Hyper-V\VHDX\BROKEN01-DISK.moved" "D:\Hyper-V\VHDX\BROKEN01-DISK.vhdx"
+}
+
 Remove-VM -Name "BROKEN01" -Force
+Remove-Item "D:\Hyper-V\VHDX\BROKEN01-DISK.vhdx" -Force -ErrorAction SilentlyContinue
 ~~~
 
 ---
