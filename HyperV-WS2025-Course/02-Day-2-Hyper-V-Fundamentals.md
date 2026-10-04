@@ -236,12 +236,39 @@ Review fields such as:
 
 Launch **Hyper-V Manager** and confirm that HV01 appears as the connected host.
 
+## Step 6 — Configure default Hyper-V storage paths
+
+Day 1 prepared dedicated Hyper-V folders. Configure the host so new VMs and virtual disks use those locations by default.
+
+~~~powershell
+Set-VMHost -VirtualMachinePath "D:\Hyper-V\VMs" -VirtualHardDiskPath "D:\Hyper-V\VHDX"
+~~~
+
+Verify:
+
+~~~powershell
+Get-VMHost | Select-Object VirtualMachinePath,VirtualHardDiskPath
+~~~
+
+Expected values:
+
+~~~text
+VirtualMachinePath  : D:\Hyper-V\VMs
+VirtualHardDiskPath : D:\Hyper-V\VHDX
+~~~
+
+### Why this matters
+
+A consistent default path reduces accidental placement of VM configuration and VHDX files on the operating-system volume and makes later administration easier.
+
 ## Validation checkpoint
 
 - [ ] Hyper-V role reports Installed.
 - [ ] VMMS is Running.
 - [ ] Hyper-V Manager opens successfully.
 - [ ] Get-VMHost returns HV01 configuration.
+- [ ] Default VM path is D:\Hyper-V\VMs.
+- [ ] Default VHDX path is D:\Hyper-V\VHDX.
 
 ---
 
@@ -624,7 +651,96 @@ Do not disable Secure Boot for a supported Windows Server 2025 guest.
 
 ---
 
-# Lab 2.4 — Install Windows Server 2025 in SRV01
+# Lab 2.4 — VM lifecycle operations
+
+## Objective
+
+Practice the basic Hyper-V VM states used during day-to-day administration.
+
+Start by checking SRV01:
+
+~~~powershell
+Get-VM SRV01
+~~~
+
+If the VM is not running:
+
+~~~powershell
+Start-VM SRV01
+~~~
+
+Verify:
+
+~~~powershell
+Get-VM SRV01
+~~~
+
+## Save the VM
+
+~~~powershell
+Save-VM SRV01
+~~~
+
+Check state:
+
+~~~powershell
+Get-VM SRV01
+~~~
+
+Expected state:
+
+~~~text
+Saved
+~~~
+
+## Resume the VM
+
+~~~powershell
+Resume-VM SRV01
+~~~
+
+Verify:
+
+~~~powershell
+Get-VM SRV01
+~~~
+
+Expected state:
+
+~~~text
+Running
+~~~
+
+## Other lifecycle commands
+
+Useful commands include:
+
+~~~powershell
+Stop-VM SRV01
+Restart-VM SRV01
+Start-VM SRV01
+~~~
+
+Do not force-stop the VM unless instructed.
+
+### State discussion
+
+Students should recognize the difference between:
+
+- **Running** — guest is actively executing;
+- **Off** — guest is powered off;
+- **Saved** — VM memory/device state is persisted to disk;
+- **Paused** — execution is temporarily suspended.
+
+### Validation checkpoint
+
+- [ ] Student can start SRV01.
+- [ ] Student can save and resume SRV01.
+- [ ] Student can identify current VM state with Get-VM.
+
+---
+
+# Lab 2.5 — Install Windows Server 2025 in SRV01
 
 ## Step 1 — Verify ISO attachment
 
@@ -665,7 +781,78 @@ After installation:
 
 ---
 
-# Lab 2.5 — Configure SRV01 networking
+# Lab 2.6 — Add a data disk to SRV01
+
+## Objective
+
+Create an additional VHDX and attach it to an existing VM.
+
+This demonstrates that a VM can have multiple virtual disks and that storage can be added independently of the OS disk.
+
+## Step 1 — Create the VHDX
+
+On HV01:
+
+~~~powershell
+New-VHD -Path "D:\Hyper-V\VHDX\SRV01-DATA.vhdx" -SizeBytes 10GB -Dynamic
+~~~
+
+Inspect it:
+
+~~~powershell
+Get-VHD "D:\Hyper-V\VHDX\SRV01-DATA.vhdx"
+~~~
+
+Review:
+
+- VhdType;
+- FileSize;
+- Size;
+- Path.
+
+## Step 2 — Attach the disk to SRV01
+
+~~~powershell
+Add-VMHardDiskDrive -VMName "SRV01" -Path "D:\Hyper-V\VHDX\SRV01-DATA.vhdx"
+~~~
+
+Verify from the host:
+
+~~~powershell
+Get-VMHardDiskDrive SRV01
+~~~
+
+Students should see both the OS disk and SRV01-DATA.vhdx.
+
+## Step 3 — Verify inside the guest
+
+Inside SRV01:
+
+~~~powershell
+Get-Disk
+~~~
+
+A new offline or uninitialized disk should appear.
+
+Do not initialize or format it during this exercise. Disk initialization was already covered on Day 1.
+
+### Teaching point
+
+Hyper-V virtual storage and guest storage are separate layers:
+
+- the host owns and attaches the VHDX file;
+- the guest sees the attached VHDX as a virtual disk.
+
+### Validation checkpoint
+
+- [ ] SRV01-DATA.vhdx exists.
+- [ ] The VHDX is attached to SRV01.
+- [ ] Get-VMHardDiskDrive shows two disks.
+- [ ] Get-Disk inside SRV01 shows the additional disk.
+
+---
+
+# Lab 2.7 — Configure SRV01 networking
 
 ## Step 1 — Inspect the guest adapter
 
@@ -728,7 +915,7 @@ Test-NetConnection 172.22.0.20
 
 ---
 
-# Lab 2.6 — Create DC01
+# Lab 2.8 — Create DC01
 
 Create a second Generation 2 VM.
 
@@ -881,10 +1068,12 @@ Students should be able to answer:
 8. What is the difference between Startup, Minimum and Maximum RAM with Dynamic Memory?
 9. What is the difference between an External, Internal and Private switch?
 10. Why does this nested lab use Internal switch + NAT instead of an External switch?
-11. What is the role of the VHDX file?
-12. Why should VM files and virtual disks use predictable storage paths?
-13. Which checks distinguish an IP problem from a DNS problem?
-14. What evidence proves which vSwitch a VM is connected to?
+11. What is the difference between Saved and Off VM states?
+12. What is the role of the VHDX file?
+13. Why should VM files and virtual disks use predictable storage paths?
+14. Why is it useful to configure host default VM and VHDX paths?
+15. Which checks distinguish an IP problem from a DNS problem?
+16. What evidence proves which vSwitch a VM is connected to?
 
 ---
 
@@ -903,7 +1092,10 @@ Students should be able to answer:
 - [ ] SRV01 created as Generation 2.
 - [ ] SRV01 configured with 2 vCPUs.
 - [ ] Dynamic Memory configured and understood.
+- [ ] Basic VM lifecycle states exercised.
+- [ ] Hyper-V default VM/VHDX paths configured.
 - [ ] SRV01 VHDX stored under the course storage path.
+- [ ] Additional SRV01 data VHDX created and attached.
 - [ ] Secure Boot inspected.
 - [ ] Windows Server 2025 installed in SRV01.
 - [ ] SRV01 configured with static IPv4.
