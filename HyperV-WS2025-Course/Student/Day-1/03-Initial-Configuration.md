@@ -47,3 +47,8 @@ Confirm host name, time/time zone, network configuration, default route, DNS, an
 ## Expected end state
 
 HV01 has a documented basic operating-system baseline before roles or storage are changed.
+
+
+## What you will do
+
+Inspect the current state with PowerShell, then locate the same information through the GUI to understand both management surfaces.
