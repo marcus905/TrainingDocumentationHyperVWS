@@ -41,3 +41,8 @@ Install, verify, and remove the training feature, then locate equivalent informa
 ## Expected end state
 
 You can identify the correct management surface for a role, feature, service, or system-level question.
+
+
+## What you will do
+
+Inspect installed components, preview a change with `-WhatIf`, install/remove the training feature, and compare PowerShell with a GUI management tool.
