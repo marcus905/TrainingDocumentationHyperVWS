@@ -3,12 +3,22 @@
 ## Objective
 Before Day 1, each student should have two Windows Server 2025 virtual machines available on a physical Hyper-V host: **HV01** and **HV02**. Hyper-V inside these VMs is installed during the course.
 
+## Required host platform
+
+The physical student workstation must run **64-bit Windows 11 Pro or Enterprise with Hyper-V available**.
+
+Windows 11 Home is not supported for this course lab because the course uses the Windows Hyper-V role as the outer virtualization layer.
+
+Microsoft reference:
+
+https://learn.microsoft.com/windows-server/virtualization/hyper-v/host-hardware-requirements
+
 ## Recommended physical workstation
 | Resource | Minimum | Recommended |
 |---|---:|---:|
 | CPU | 4 cores / 8 logical processors | 8+ cores |
-| RAM | 16 GB | 32 GB+ |
-| Free storage | 150 GB | 250-500 GB SSD/NVMe |
+| RAM | 24 GB | 32 GB+ |
+| Free storage | 250 GB | 350-500 GB SSD/NVMe |
 | Network | Stable connection | 1 GbE or stable Wi-Fi |
 | Hardware virtualization | Required | Required |
 | SLAT | Required | Required |
@@ -136,7 +146,74 @@ Copy the Windows Server 2025 ISO into the ISO folder before continuing.
 
 ---
 
-## Exercise 0.5 — Create HV01 and HV02
+## Exercise 0.5 — Create the outer course network
+
+The physical Windows 11 host uses a dedicated Internal switch and Windows NAT for HV01 and HV02.
+
+This keeps the course independent from the student's home or corporate LAN and gives the two outer Hyper-V hosts predictable management addresses.
+
+### Outer management addressing plan
+
+~~~text
+Network:            192.168.240.0/24
+Physical host/NAT:  192.168.240.1
+HV01:               192.168.240.11
+HV02:               192.168.240.12
+DNS for HV01/HV02:  instructor-approved external DNS, for example 1.1.1.1
+~~~
+
+### Step 1 — Check existing NAT configuration
+
+~~~powershell
+Get-NetNat
+Get-VMSwitch
+~~~
+
+Windows NAT has host-level limitations. If the workstation already has unrelated NAT configuration, do not remove it blindly. Resolve the conflict before class or coordinate with the instructor.
+
+### Step 2 — Create the Internal switch
+
+~~~powershell
+New-VMSwitch -Name "vSW-Course" -SwitchType Internal
+~~~
+
+Verify:
+
+~~~powershell
+Get-VMSwitch -Name "vSW-Course"
+~~~
+
+### Step 3 — Assign the host gateway address
+
+~~~powershell
+New-NetIPAddress -InterfaceAlias "vEthernet (vSW-Course)" -IPAddress 192.168.240.1 -PrefixLength 24
+~~~
+
+Verify:
+
+~~~powershell
+Get-NetIPAddress -InterfaceAlias "vEthernet (vSW-Course)" -AddressFamily IPv4
+~~~
+
+### Step 4 — Create the NAT object
+
+~~~powershell
+New-NetNat -Name "CourseNAT" -InternalIPInterfaceAddressPrefix "192.168.240.0/24"
+~~~
+
+Verify:
+
+~~~powershell
+Get-NetNat -Name "CourseNAT"
+~~~
+
+Reference:
+
+https://learn.microsoft.com/virtualization/hyper-v-on-windows/user-guide/setup-nat-network
+
+---
+
+## Exercise 0.6 — Create HV01 and HV02
 
 ### Recommended configuration
 
@@ -147,6 +224,8 @@ Copy the Windows Server 2025 ISO into the ISO folder before continuing.
 | Startup RAM | 8 GB | 6-8 GB |
 | Dynamic Memory | Disabled | Disabled |
 | OS disk | 100 GB dynamically expanding VHDX | 100 GB dynamically expanding VHDX |
+| Data disk | 200 GB dynamically expanding VHDX | 200 GB dynamically expanding VHDX |
+| Outer network | vSW-Course | vSW-Course |
 | OS | Windows Server 2025 Datacenter Evaluation, Desktop Experience | Windows Server 2025 Datacenter Evaluation, Desktop Experience |
 | Firmware | UEFI / Generation 2 | UEFI / Generation 2 |
 
@@ -164,27 +243,35 @@ For each VM:
 6. Select Generation 2.
 7. Assign the startup memory shown above.
 8. Disable Dynamic Memory.
-9. Connect to the course uplink/NAT switch if already available; otherwise leave the VM temporarily disconnected.
-10. Create a 100 GB dynamically expanding VHDX.
+9. Connect to **vSW-Course**.
+10. Create a 100 GB dynamically expanding OS VHDX.
 11. Select installation from a bootable image file.
 12. Select C:\HyperV-Course\ISO\WS2025-EVAL-x64-EN.iso.
 13. Finish the wizard.
 14. Open VM Settings > Processor and configure 4 virtual processors.
+15. Add a second SCSI virtual hard disk:
+    - HV01: C:\HyperV-Course\VHDX\HV01-DATA.vhdx
+    - HV02: C:\HyperV-Course\VHDX\HV02-DATA.vhdx
+    - Size: 200 GB, dynamically expanding.
 
 ### Option B — PowerShell
 
 ~~~powershell
 $ISO = "C:\HyperV-Course\ISO\WS2025-EVAL-x64-EN.iso"
 
-New-VM -Name "HV01" -Generation 2 -MemoryStartupBytes 8GB -Path "C:\HyperV-Course\VMs" -NewVHDPath "C:\HyperV-Course\VHDX\HV01-OS.vhdx" -NewVHDSizeBytes 100GB
+New-VM -Name "HV01" -Generation 2 -MemoryStartupBytes 8GB -Path "C:\HyperV-Course\VMs" -NewVHDPath "C:\HyperV-Course\VHDX\HV01-OS.vhdx" -NewVHDSizeBytes 100GB -SwitchName "vSW-Course"
 Set-VMProcessor -VMName "HV01" -Count 4
 Set-VMMemory -VMName "HV01" -DynamicMemoryEnabled $false
 Add-VMDvdDrive -VMName "HV01" -Path $ISO
+New-VHD -Path "C:\HyperV-Course\VHDX\HV01-DATA.vhdx" -SizeBytes 200GB -Dynamic
+Add-VMHardDiskDrive -VMName "HV01" -Path "C:\HyperV-Course\VHDX\HV01-DATA.vhdx"
 
-New-VM -Name "HV02" -Generation 2 -MemoryStartupBytes 8GB -Path "C:\HyperV-Course\VMs" -NewVHDPath "C:\HyperV-Course\VHDX\HV02-OS.vhdx" -NewVHDSizeBytes 100GB
+New-VM -Name "HV02" -Generation 2 -MemoryStartupBytes 8GB -Path "C:\HyperV-Course\VMs" -NewVHDPath "C:\HyperV-Course\VHDX\HV02-OS.vhdx" -NewVHDSizeBytes 100GB -SwitchName "vSW-Course"
 Set-VMProcessor -VMName "HV02" -Count 4
 Set-VMMemory -VMName "HV02" -DynamicMemoryEnabled $false
 Add-VMDvdDrive -VMName "HV02" -Path $ISO
+New-VHD -Path "C:\HyperV-Course\VHDX\HV02-DATA.vhdx" -SizeBytes 200GB -Dynamic
+Add-VMHardDiskDrive -VMName "HV02" -Path "C:\HyperV-Course\VHDX\HV02-DATA.vhdx"
 ~~~
 
 Confirm ISO attachment:
@@ -213,7 +300,7 @@ Get-VMDvdDrive HV01,HV02
 
 ---
 
-## Exercise 0.6 — Install Windows Server 2025 on HV01 and HV02
+## Exercise 0.7 — Install Windows Server 2025 on HV01 and HV02
 
 Start HV01 and open its console:
 
@@ -248,7 +335,51 @@ https://learn.microsoft.com/windows-server/get-started/upgrade-conversion-option
 
 ---
 
-## Exercise 0.7 — Enable nested virtualization
+## Exercise 0.8 — Configure outer-host management networking and release drive D:
+
+Inside HV01, configure the adapter attached to vSW-Course:
+
+~~~powershell
+Get-NetAdapter
+New-NetIPAddress -InterfaceAlias "Ethernet" -IPAddress 192.168.240.11 -PrefixLength 24 -DefaultGateway 192.168.240.1
+Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses 1.1.1.1
+~~~
+
+Inside HV02:
+
+~~~powershell
+Get-NetAdapter
+New-NetIPAddress -InterfaceAlias "Ethernet" -IPAddress 192.168.240.12 -PrefixLength 24 -DefaultGateway 192.168.240.1
+Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses 1.1.1.1
+~~~
+
+Validate on both:
+
+~~~powershell
+Get-NetIPConfiguration
+Test-NetConnection 192.168.240.1
+Test-NetConnection 1.1.1.1
+Resolve-DnsName microsoft.com
+~~~
+
+### Remove the outer installation DVD drive
+
+After Windows Server is installed, the virtual DVD can occupy drive letter D: inside HV01/HV02.
+
+The course reserves **D:** for the Hyper-V data disk, so remove the outer DVD drive from both VMs.
+
+On the physical Windows 11 host, shut down HV01 and HV02, then run:
+
+~~~powershell
+Get-VMDvdDrive -VMName HV01 | Remove-VMDvdDrive
+Get-VMDvdDrive -VMName HV02 | Remove-VMDvdDrive
+~~~
+
+Start both VMs again and confirm that drive letter D: is no longer occupied by the DVD device.
+
+---
+
+## Exercise 0.9 — Enable nested virtualization
 Power off both VMs first.
 
 ~~~powershell
@@ -262,30 +393,51 @@ Expected result: ExposeVirtualizationExtensions = True.
 Reference: https://learn.microsoft.com/windows-server/virtualization/hyper-v/enable-nested-virtualization
 
 ## Networking approach
-Use a controlled Internal/NAT design for the remote lab rather than depending on the student's corporate or home LAN.
+
+The course uses two separate NAT networks.
 
 ~~~text
 Internet / Physical LAN
         |
-Physical Hyper-V Host
+Physical Windows 11 Hyper-V Host
         |
-   NAT / Internal network
+vSW-Course + CourseNAT
+192.168.240.0/24
         |
    +----+----+
    |         |
-  HV01      HV02
+HV01 .11   HV02 .12
    |
-Nested Hyper-V networking
+   |  nested Hyper-V network created on Day 2
+   |
+vSW-Lab + LabNAT
+172.22.0.0/24
    |
 +--+-------+
 |          |
 DC01      SRV01
+.10        .20
 ~~~
 
+The outer 192.168.240.0/24 network is used for management and later Hyper-V Replica communication between HV01 and HV02.
+
+The inner 172.22.0.0/24 network is created inside the nested Hyper-V hosts for workload VMs.
+
+Reference:
+
+https://learn.microsoft.com/windows-server/virtualization/hyper-v/enable-nested-virtualization
+
 ## Readiness checklist
+- [ ] Physical workstation runs Windows 11 Pro or Enterprise.
 - [ ] Hyper-V installed on physical workstation.
+- [ ] At least 24 GB physical RAM available.
+- [ ] At least 250 GB free SSD/NVMe storage available.
 - [ ] Windows Server 2025 ISO available.
+- [ ] vSW-Course and CourseNAT configured.
 - [ ] HV01 and HV02 boot successfully.
+- [ ] HV01 uses 192.168.240.11/24 and HV02 uses 192.168.240.12/24.
+- [ ] 200 GB dynamic data disks are attached to HV01 and HV02.
+- [ ] Outer DVD drives removed so D: remains available for course data disks.
 - [ ] Nested virtualization enabled on both.
 - [ ] Adequate free disk space remains.
 - [ ] Local administrator rights available.
