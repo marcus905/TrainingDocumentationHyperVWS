@@ -8,10 +8,13 @@ Hyper-V security is not a separate product bolted onto virtualization; it is a s
 
 Inspect practical Hyper-V host and VM security without turning the course into a security specialization.
 
-
 ## Concepts to keep in mind
 
 Security controls should be appropriate, supportable, and recoverable. Generation 2, Secure Boot, vTPM, least privilege, patching, firewalling, protected management paths, and backup security all solve different risks.
+
+## What you will do
+
+Inspect SRV01 firmware/security settings, review host-side security posture, and identify which controls are active, optional, or inappropriate for the current lab.
 
 ## Host
 
@@ -46,21 +49,13 @@ Do not enable security features blindly; understand guest support and recovery i
 
 Treat backup credentials, repositories, encryption keys and recovery documentation as security-sensitive assets.
 
-
-## What you will do
-
-Inspect SRV01 firmware/security settings, review host-side security posture, and identify which controls are active, optional, or inappropriate for the current lab.
-
-
 ## What you should observe
 
 Some security features are visible in VM configuration while others depend on host policy, guest OS support, organizational tooling, or recovery design.
 
-
 ## Validation checkpoint
 
 Identify at least three host-side controls and three VM-side controls and explain what risk each reduces.
-
 
 ## Expected end state
 
