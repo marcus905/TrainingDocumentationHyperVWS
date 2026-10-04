@@ -63,3 +63,8 @@ Confirm the host edition, available RAM, free storage, hardware virtualization, 
 ## Expected end state
 
 The physical workstation is confirmed suitable for the course and can host HV01 and HV02 without changing the lab design later.
+
+
+## What you will do
+
+Run the platform checks, enable Hyper-V if required, restart when necessary, and confirm the workstation meets the minimum CPU, RAM, storage, and virtualization requirements before creating any course VMs.
