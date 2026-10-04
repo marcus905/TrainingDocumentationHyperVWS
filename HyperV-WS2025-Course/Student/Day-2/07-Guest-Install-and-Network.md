@@ -24,21 +24,17 @@ Validate gateway, Internet IP, DNS and HTTPS connectivity.
 
 Attaching a VHDX to a VM does not initialize it inside Windows, and connecting a vNIC to a switch does not assign a guest IP. The hypervisor and guest layers must both be configured and verified.
 
-
 ## What you will do
 
 Install Windows Server in SRV01, attach the 10 GB data VHDX, inspect it from the guest, configure 172.22.0.20/24 with gateway 172.22.0.1, and validate layered connectivity.
-
 
 ## What you should observe
 
 The guest should reach the nested gateway first, then external IP connectivity, then DNS/name-based destinations. The extra VHDX should appear as a separate guest disk device.
 
-
 ## Validation checkpoint
 
 Verify guest IP/gateway/DNS, host-to-guest connectivity, external IP reachability, and visibility of the attached data disk.
-
 
 ## Expected end state
 
