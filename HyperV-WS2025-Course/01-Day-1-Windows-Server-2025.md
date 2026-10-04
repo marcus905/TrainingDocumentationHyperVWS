@@ -1,91 +1,810 @@
 # Day 1 — Windows Server 2025 Fundamentals
 
 ## Learning objectives
-Students should be able to:
-- explain basic Windows Server architecture;
+
+By the end of Day 1, students should be able to:
+
+- explain the basic Windows Server architecture and installation options;
 - distinguish Server Core and Desktop Experience;
-- perform initial server configuration;
+- perform initial post-installation configuration;
 - manage roles and features;
 - use Server Manager, SConfig and PowerShell;
-- configure IPv4, DNS and basic routing;
+- configure IPv4 addressing, DNS and basic routing;
 - inspect and configure local storage;
 - validate a newly deployed server;
-- troubleshoot basic post-installation issues.
+- troubleshoot common post-installation issues using evidence.
 
-## Module 1 — Architecture and installation options
-Topics include Standard/Datacenter concepts, roles, features, Server Core, Desktop Experience, services, events, networking, storage, remote management and PowerShell.
+---
 
-Reference: https://learn.microsoft.com/windows-server/get-started/getting-started-with-server-core
+# Module 1 — Windows Server 2025 architecture and installation options
 
-## Lab 1.1 — Initial configuration
-Tasks:
-1. Verify edition/build.
-2. Rename the server to HV01.
-3. Set time zone.
-4. Review Windows Update state.
-5. Inspect adapters.
-6. Configure IPv4 and DNS.
-7. Inspect routing.
-8. Verify connectivity and name resolution.
+## Concepts
+
+Discuss:
+
+- Windows Server Standard and Datacenter editions;
+- Server Core;
+- Server with Desktop Experience;
+- roles and role services;
+- Windows features;
+- Windows services;
+- Event Logs;
+- network interfaces and TCP/IP configuration;
+- disks, partitions and volumes;
+- local versus remote management;
+- PowerShell as an administrative interface.
+
+### Server Core vs Desktop Experience
+
+Server Core has a reduced graphical footprint and is normally managed using PowerShell, SConfig and remote administration tools.
+
+Desktop Experience includes the full Windows graphical shell.
+
+For this course, HV01 and HV02 use **Desktop Experience** because students need local access to tools such as:
+
+- Server Manager;
+- Event Viewer;
+- Performance Monitor;
+- Resource Monitor;
+- Hyper-V Manager.
+
+Reference:
+
+https://learn.microsoft.com/windows-server/get-started/getting-started-with-server-core
+
+---
+
+# Lab 1.1 — Initial server inspection and configuration
+
+## Objective
+
+Become familiar with a newly installed Windows Server 2025 system and establish a known configuration baseline.
+
+Run all PowerShell commands from an **elevated PowerShell session** unless otherwise stated.
+
+## Step 1 — Inspect the operating system
+
+Run:
 
 ~~~powershell
 Get-ComputerInfo
+~~~
+
+### What this command does
+
+Get-ComputerInfo returns a broad inventory of operating system, hardware, firmware and configuration information.
+
+The output is intentionally extensive. Students should not attempt to memorize it.
+
+Focus on fields such as:
+
+- WindowsProductName;
+- WindowsEditionId;
+- WindowsVersion;
+- OsName;
+- OsVersion;
+- OsBuildNumber;
+- CsName;
+- CsDomain;
+- CsProcessors;
+- CsTotalPhysicalMemory;
+- BiosFirmwareType.
+
+A shorter view can be generated with:
+
+~~~powershell
+Get-ComputerInfo | Select-Object WindowsProductName,WindowsEditionId,OsVersion,OsBuildNumber,CsName,CsDomain,CsTotalPhysicalMemory,BiosFirmwareType
+~~~
+
+### Validation
+
+Students should be able to identify:
+
+1. the Windows Server edition;
+2. the server name;
+3. the build/version;
+4. available physical memory;
+5. firmware type.
+
+---
+
+## Step 2 — Verify the current computer name
+
+Run:
+
+~~~powershell
 hostname
-Get-NetAdapter
-Get-NetIPAddress
-Get-NetIPConfiguration
-Get-DnsClientServerAddress
-Get-NetRoute
+~~~
+
+and compare with:
+
+~~~powershell
+$env:COMPUTERNAME
+~~~
+
+and:
+
+~~~powershell
+Get-ComputerInfo | Select-Object CsName
+~~~
+
+### Why use several methods?
+
+This demonstrates that Windows configuration can often be inspected using:
+
+- classic command-line utilities;
+- environment variables;
+- PowerShell cmdlets.
+
+All three should report the same computer name.
+
+---
+
+## Step 3 — Rename the server
+
+If the server is not already named HV01:
+
+~~~powershell
 Rename-Computer -NewName "HV01"
-Test-NetConnection
+~~~
+
+### What happens?
+
+Rename-Computer changes the configured computer name, but the new name does not become fully active until the server restarts.
+
+Verify the pending change:
+
+~~~powershell
+Get-ComputerInfo | Select-Object CsName
+~~~
+
+Restart when instructed by the trainer:
+
+~~~powershell
+Restart-Computer
+~~~
+
+After restart:
+
+~~~powershell
+hostname
+~~~
+
+Expected result:
+
+~~~text
+HV01
+~~~
+
+### Troubleshooting note
+
+If Rename-Computer fails, check that:
+
+- PowerShell is running elevated;
+- the requested name is valid;
+- no policy or domain restriction prevents the change.
+
+---
+
+## Step 4 — Review time and time zone configuration
+
+Run:
+
+~~~powershell
+Get-Date
+Get-TimeZone
+~~~
+
+### Why this matters
+
+Incorrect system time can affect:
+
+- authentication;
+- Kerberos;
+- certificates;
+- event correlation;
+- troubleshooting timelines;
+- replication technologies.
+
+List available time zones if required:
+
+~~~powershell
+Get-TimeZone -ListAvailable
+~~~
+
+Do not change the time zone unless requested by the instructor.
+
+---
+
+## Step 5 — Inspect network adapters
+
+Run:
+
+~~~powershell
+Get-NetAdapter
+~~~
+
+### Important fields
+
+Look at:
+
+- Name;
+- InterfaceDescription;
+- Status;
+- LinkSpeed;
+- MacAddress;
+- ifIndex.
+
+A more concise view:
+
+~~~powershell
+Get-NetAdapter | Select-Object Name,Status,LinkSpeed,MacAddress,ifIndex
+~~~
+
+### Interpretation
+
+Status should normally be **Up** for an active interface.
+
+If the interface is Down, determine whether:
+
+- the virtual adapter is disconnected;
+- the Hyper-V virtual switch is incorrect;
+- the adapter is administratively disabled.
+
+---
+
+## Step 6 — Inspect IP addressing
+
+Run:
+
+~~~powershell
+Get-NetIPAddress
+~~~
+
+This can return multiple addresses including IPv4, IPv6 and automatically generated addresses.
+
+To focus on IPv4:
+
+~~~powershell
+Get-NetIPAddress -AddressFamily IPv4
+~~~
+
+For an operational summary:
+
+~~~powershell
+Get-NetIPConfiguration
+~~~
+
+### What to identify
+
+Students should locate:
+
+- interface name;
+- IPv4 address;
+- prefix length;
+- default gateway;
+- DNS servers.
+
+Compare the output with the classic command:
+
+~~~powershell
+ipconfig /all
+~~~
+
+### Teaching point
+
+Get-NetIPConfiguration is usually easier to consume programmatically.
+
+ipconfig /all remains extremely useful during troubleshooting because it exposes a familiar consolidated view.
+
+---
+
+## Step 7 — Inspect DNS configuration
+
+Run:
+
+~~~powershell
+Get-DnsClientServerAddress
+~~~
+
+Limit output to IPv4:
+
+~~~powershell
+Get-DnsClientServerAddress -AddressFamily IPv4
+~~~
+
+### Questions for students
+
+- Which adapter has DNS servers configured?
+- Is the server using one or multiple DNS servers?
+- Are those DNS servers reachable?
+- Are they appropriate for the lab network?
+
+---
+
+## Step 8 — Inspect routing
+
+Run:
+
+~~~powershell
+Get-NetRoute
+~~~
+
+The routing table can be large.
+
+Focus on IPv4 default routes:
+
+~~~powershell
+Get-NetRoute -AddressFamily IPv4 | Where-Object DestinationPrefix -eq "0.0.0.0/0"
+~~~
+
+### Important fields
+
+- DestinationPrefix;
+- NextHop;
+- InterfaceAlias;
+- RouteMetric;
+- ifMetric.
+
+### Teaching point
+
+The default route determines where traffic is sent when no more specific route exists.
+
+A machine can have a correct IP address and still fail to communicate outside its subnet if the default gateway is wrong or missing.
+
+---
+
+## Step 9 — Test connectivity
+
+Start with basic IP connectivity:
+
+~~~powershell
+Test-NetConnection 1.1.1.1
+~~~
+
+Important field:
+
+~~~text
+PingSucceeded
+~~~
+
+Next test a hostname:
+
+~~~powershell
+Test-NetConnection microsoft.com
+~~~
+
+Then test DNS directly:
+
+~~~powershell
 Resolve-DnsName microsoft.com
 ~~~
 
-Key distinction: IP connectivity, routing and DNS resolution are separate layers.
+### Interpretation
 
-## Module 2 — Roles and features
+Possible outcomes:
+
+| Test | Result | Likely conclusion |
+|---|---|---|
+| IP succeeds, DNS succeeds | Normal | Network path and DNS are functional |
+| IP succeeds, DNS fails | Problem | Investigate DNS |
+| IP fails, DNS resolves | Possible routing/firewall issue | DNS may work but data path is failing |
+| Both fail | Broader connectivity issue | Check adapter, IP, route and upstream network |
+
+The exact behavior of public ICMP tests can be affected by upstream firewalls, so do not use ping as the only proof of network health.
+
+---
+
+# Module 2 — Roles and features
+
+Windows Server uses roles and features to add operating-system capabilities.
+
+Microsoft supports managing them through both Server Manager and PowerShell. Get-WindowsFeature lists roles and features, while Install-WindowsFeature installs them. Management tools are not automatically added for every role unless requested with the appropriate option. citeturn697734search0turn697734search1
+
+## Step 1 — List available roles and features
+
 ~~~powershell
 Get-WindowsFeature
-Get-WindowsFeature | Where-Object Installed
-Install-WindowsFeature Telnet-Client
-Get-WindowsFeature Telnet-Client
-Remove-WindowsFeature Telnet-Client
 ~~~
 
-The Telnet Client example is used only to demonstrate feature-management workflow.
+### Reading the output
 
-## Module 3 — Administration tools
-Introduce Server Manager, Computer Management, Services, Event Viewer, Task Manager, Resource Monitor, Performance Monitor, SConfig, PowerShell and Windows Admin Center conceptually.
+Typical columns include:
 
-## Module 4 — Basic networking
+- Display Name;
+- Name;
+- Install State.
+
+The **Name** value is the identifier used by PowerShell.
+
+For example, a display name may be friendly text while the PowerShell name is shorter.
+
+---
+
+## Step 2 — Display only installed components
+
 ~~~powershell
-ipconfig /all
-Get-NetAdapter
-Get-NetIPAddress
-Get-NetIPConfiguration
-Get-DnsClientServerAddress
-Get-NetRoute
-Test-NetConnection
-Resolve-DnsName
+Get-WindowsFeature | Where-Object Installed
 ~~~
 
-### Lab 1.2 — Static IPv4 pattern
+Alternative syntax:
+
+~~~powershell
+Get-WindowsFeature | Where-Object InstallState -eq "Installed"
+~~~
+
+### Teaching point
+
+The pipeline sends objects returned by Get-WindowsFeature to Where-Object for filtering.
+
+Students should understand that this is object-based processing rather than text parsing.
+
+---
+
+## Step 3 — Search for a feature
+
+Before installing anything, find it:
+
+~~~powershell
+Get-WindowsFeature *Telnet*
+~~~
+
+This demonstrates wildcard filtering.
+
+---
+
+## Step 4 — Preview a change
+
+Use WhatIf before performing the installation:
+
+~~~powershell
+Install-WindowsFeature Telnet-Client -WhatIf
+~~~
+
+### Why use WhatIf?
+
+WhatIf shows the intended action without applying the change.
+
+It is a useful habit when learning administrative PowerShell commands.
+
+---
+
+## Step 5 — Install the training feature
+
+~~~powershell
+Install-WindowsFeature Telnet-Client
+~~~
+
+The returned object includes values such as:
+
+- Success;
+- RestartNeeded;
+- ExitCode;
+- FeatureResult.
+
+Verify:
+
+~~~powershell
+Get-WindowsFeature Telnet-Client
+~~~
+
+Expected state:
+
+~~~text
+Installed
+~~~
+
+The Telnet Client is used only as a simple feature-management example. It is not being recommended as a production remote-administration method.
+
+---
+
+## Step 6 — Remove the feature
+
+Preferred current cmdlet:
+
+~~~powershell
+Uninstall-WindowsFeature Telnet-Client
+~~~
+
+Verify again:
+
+~~~powershell
+Get-WindowsFeature Telnet-Client
+~~~
+
+Expected state:
+
+~~~text
+Available
+~~~
+
+---
+
+# Module 3 — Windows Server administration tools
+
+Students should know when each tool is appropriate.
+
+| Tool | Typical use |
+|---|---|
+| Server Manager | Roles, features, server overview and multi-server management |
+| Computer Management | Local administration console |
+| Services | Service startup/state management |
+| Event Viewer | Logs and diagnostic events |
+| Task Manager | Fast process/resource overview |
+| Resource Monitor | Per-process CPU, disk, memory and network detail |
+| Performance Monitor | Counters, baselines and historical collection |
+| SConfig | Server configuration, especially important on Server Core |
+| PowerShell | Repeatable and scriptable administration |
+| Windows Admin Center | Browser-based Windows infrastructure management |
+
+## Exercise 1.2 — Find the same information using GUI and PowerShell
+
+Students should identify:
+
+1. the server name;
+2. active network interfaces;
+3. installed roles;
+4. service status;
+5. recent system errors;
+6. disk/volume state.
+
+For each item, find one GUI method and one PowerShell method.
+
+Example:
+
+| Information | GUI | PowerShell |
+|---|---|---|
+| Network adapters | Server Manager / Network Connections | Get-NetAdapter |
+| System errors | Event Viewer | Get-WinEvent |
+| Volumes | Disk Management | Get-Volume |
+| Services | Services.msc | Get-Service |
+
+---
+
+# Module 4 — Basic networking configuration
+
+## Addressing plan
+
+The instructor should provide the final lab addressing plan.
+
+Example only:
+
+~~~text
+HV01
+IPv4 address: 10.10.10.11
+Prefix:       /24
+Gateway:      10.10.10.1
+DNS:          10.10.10.10
+~~~
+
+Do not copy this example blindly if the class topology uses different addresses.
+
+---
+
+## Lab 1.3 — Configure a static IPv4 address
+
+### Step 1 — Identify the interface name
+
+~~~powershell
+Get-NetAdapter
+~~~
+
+Assume the interface is named Ethernet.
+
+### Step 2 — Inspect existing configuration
+
+~~~powershell
+Get-NetIPConfiguration -InterfaceAlias "Ethernet"
+~~~
+
+### Step 3 — Configure the IP address
+
 ~~~powershell
 New-NetIPAddress -InterfaceAlias "Ethernet" -IPAddress 10.10.10.11 -PrefixLength 24 -DefaultGateway 10.10.10.1
+~~~
+
+### Parameter explanation
+
+- InterfaceAlias selects the network adapter.
+- IPAddress defines the static address.
+- PrefixLength defines the subnet.
+- DefaultGateway creates the default route.
+
+### Important remote-lab warning
+
+Changing the wrong interface can interrupt connectivity.
+
+Students should verify the interface before executing this command.
+
+### Step 4 — Configure DNS
+
+~~~powershell
 Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses 10.10.10.10
 ~~~
 
-Adapt addresses to the actual class topology.
+For multiple DNS servers:
 
-## Module 5 — Local storage
+~~~powershell
+Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses 10.10.10.10,10.10.10.11
+~~~
+
+### Step 5 — Validate
+
+~~~powershell
+Get-NetIPConfiguration -InterfaceAlias "Ethernet"
+Get-DnsClientServerAddress -InterfaceAlias "Ethernet"
+Get-NetRoute -AddressFamily IPv4
+~~~
+
+Test:
+
+~~~powershell
+Test-NetConnection 10.10.10.1
+Resolve-DnsName microsoft.com
+~~~
+
+Students should record their final configuration.
+
+---
+
+# Module 5 — Local storage
+
+## Concepts
+
+Explain the distinction between:
+
+- physical/virtual disk;
+- disk initialization;
+- GPT partition table;
+- partition;
+- volume;
+- filesystem;
+- drive letter;
+- volume label.
+
+## Step 1 — Inspect disks
+
 ~~~powershell
 Get-Disk
+~~~
+
+Important fields:
+
+- Number;
+- FriendlyName;
+- OperationalStatus;
+- PartitionStyle;
+- Size.
+
+Students must carefully identify the newly attached training disk.
+
+Do not assume the new disk is always Disk 1.
+
+---
+
+## Step 2 — Inspect partitions
+
+~~~powershell
 Get-Partition
+~~~
+
+This maps partitions to disk numbers and drive letters.
+
+---
+
+## Step 3 — Inspect volumes
+
+~~~powershell
 Get-Volume
 ~~~
 
-### Lab 1.3 — Add Hyper-V data storage
-Attach a 20-40 GB VHDX to HV01, initialize it as GPT, create a D: volume and prepare:
+Important fields:
+
+- DriveLetter;
+- FileSystemLabel;
+- FileSystem;
+- HealthStatus;
+- Size;
+- SizeRemaining.
+
+---
+
+# Lab 1.4 — Prepare the Hyper-V data disk
+
+## Safety check
+
+Before modifying a disk, identify the intended training disk:
+
+~~~powershell
+Get-Disk | Format-Table Number,FriendlyName,PartitionStyle,OperationalStatus,Size
+~~~
+
+The instructor should confirm the disk number before students continue.
+
+For the examples below, assume the training disk is **Disk 1**.
+
+## Step 1 — Initialize the disk
+
+~~~powershell
+Initialize-Disk -Number 1 -PartitionStyle GPT
+~~~
+
+### What this does
+
+Initialize-Disk prepares a raw disk with a partition table.
+
+GPT is used for the training disk.
+
+Verify:
+
+~~~powershell
+Get-Disk -Number 1
+~~~
+
+PartitionStyle should now report GPT.
+
+---
+
+## Step 2 — Create a partition
+
+~~~powershell
+New-Partition -DiskNumber 1 -UseMaximumSize -DriveLetter D
+~~~
+
+### What this does
+
+- DiskNumber selects the disk.
+- UseMaximumSize allocates the available space.
+- DriveLetter assigns D:.
+
+Verify:
+
+~~~powershell
+Get-Partition -DiskNumber 1
+~~~
+
+---
+
+## Step 3 — Format the volume
+
+~~~powershell
+Format-Volume -DriveLetter D -FileSystem NTFS -NewFileSystemLabel "HyperVData" -Confirm:$false
+~~~
+
+### What this does
+
+Creates an NTFS filesystem and labels the volume HyperVData.
+
+Verify:
+
+~~~powershell
+Get-Volume -DriveLetter D
+~~~
+
+Expected:
+
+- FileSystem = NTFS;
+- FileSystemLabel = HyperVData;
+- HealthStatus = Healthy.
+
+---
+
+## Step 4 — Create the Hyper-V folder structure
+
+~~~powershell
+New-Item -ItemType Directory -Path "D:\Hyper-V\VMs" -Force
+New-Item -ItemType Directory -Path "D:\Hyper-V\VHDX" -Force
+New-Item -ItemType Directory -Path "D:\Hyper-V\ISO" -Force
+New-Item -ItemType Directory -Path "D:\Hyper-V\Replica" -Force
+~~~
+
+Verify:
+
+~~~powershell
+Get-ChildItem "D:\Hyper-V"
+~~~
+
+Expected structure:
 
 ~~~text
 D:\Hyper-V
@@ -96,31 +815,137 @@ D:\Hyper-V
 +-- Replica
 ~~~
 
-## Break/Fix 1 — DNS failure
-Symptom: IP connectivity works, but hostnames cannot be resolved.
+### Teaching point
 
-Use:
+The exact production folder layout is an organizational decision.
+
+The purpose of this structure is to introduce predictable placement and operational consistency before installing Hyper-V.
+
+---
+
+# Break/Fix 1 — DNS failure
+
+## Scenario
+
+The instructor intentionally configures an incorrect DNS server.
+
+The student is told only:
+
+> The server appears to have network connectivity, but accessing resources by hostname fails.
+
+## Rule
+
+Do not change the configuration immediately.
+
+First collect evidence.
+
+## Step 1 — Check adapter and IP configuration
 
 ~~~powershell
+Get-NetAdapter
+Get-NetIPConfiguration
 ipconfig /all
-Get-DnsClientServerAddress
-Resolve-DnsName microsoft.com
-Get-NetRoute
 ~~~
 
-Learning outcome: prove whether the problem is DNS or general network connectivity.
+Questions:
 
-## End-of-day validation
-- [ ] Server name correct.
-- [ ] IPv4/DNS documented.
-- [ ] Default route understood.
-- [ ] Roles/features queried.
-- [ ] Additional storage prepared.
-- [ ] Event Viewer reviewed.
-- [ ] Basic connectivity tests understood.
+- Is the interface Up?
+- Is the IP correct?
+- Is the gateway correct?
+- Which DNS server is configured?
 
-## Microsoft references
-- https://learn.microsoft.com/windows-server/get-started/overview
-- https://learn.microsoft.com/windows-server/get-started/install-windows-server
-- https://learn.microsoft.com/windows-server/get-started/hardware-requirements
-- https://learn.microsoft.com/windows-server/get-started/getting-started-with-server-core
+## Step 2 — Test the network path
+
+Test the local gateway:
+
+~~~powershell
+Test-NetConnection 10.10.10.1
+~~~
+
+Test another known IP if supplied by the instructor.
+
+## Step 3 — Test DNS resolution
+
+~~~powershell
+Resolve-DnsName microsoft.com
+~~~
+
+If the lab has an internal DNS server, also test an internal hostname.
+
+## Step 4 — Inspect DNS servers
+
+~~~powershell
+Get-DnsClientServerAddress -AddressFamily IPv4
+~~~
+
+## Student conclusion
+
+Students should report:
+
+- symptom;
+- evidence;
+- affected layer;
+- likely root cause;
+- proposed correction.
+
+Only then should the DNS configuration be corrected.
+
+## Validate after correction
+
+~~~powershell
+Resolve-DnsName microsoft.com
+Test-NetConnection microsoft.com -Port 443
+~~~
+
+Using TCP port 443 validation helps demonstrate that successful name resolution and actual application connectivity are distinct checks.
+
+---
+
+# Day 1 review questions
+
+Students should be able to answer:
+
+1. What is the difference between Server Core and Desktop Experience?
+2. What information does Get-NetIPConfiguration consolidate?
+3. Why can correct IP addressing still result in failed external communication?
+4. What is the purpose of a default route?
+5. What is the difference between Test-NetConnection and Resolve-DnsName?
+6. Why should a disk number always be verified before Initialize-Disk?
+7. What is the difference between a disk, partition and volume?
+8. Why use WhatIf before certain administrative commands?
+9. What does the PowerShell pipeline do in Get-WindowsFeature | Where-Object Installed?
+10. Why is consistent folder structure useful in server administration?
+
+---
+
+# End-of-day validation checklist
+
+- [ ] Windows Server edition/build identified.
+- [ ] Server name verified.
+- [ ] Time and time zone checked.
+- [ ] Network interfaces inspected.
+- [ ] IPv4 configuration understood and documented.
+- [ ] DNS configuration understood and documented.
+- [ ] Default route identified.
+- [ ] Connectivity and DNS tested separately.
+- [ ] Roles/features queried and modified.
+- [ ] Administration tools reviewed.
+- [ ] Training data disk initialized safely.
+- [ ] NTFS volume created and verified.
+- [ ] Hyper-V folder structure created.
+- [ ] DNS break/fix scenario completed using evidence.
+- [ ] Student can explain the reasoning behind the commands used.
+
+---
+
+# Microsoft references
+
+- Windows Server overview: https://learn.microsoft.com/windows-server/get-started/overview
+- Install Windows Server: https://learn.microsoft.com/windows-server/get-started/install-windows-server
+- Windows Server hardware requirements: https://learn.microsoft.com/windows-server/get-started/hardware-requirements
+- Server Core: https://learn.microsoft.com/windows-server/get-started/getting-started-with-server-core
+- Roles and features: https://learn.microsoft.com/windows-server/administration/server-manager/add-remove-roles-features
+- Install-WindowsFeature: https://learn.microsoft.com/powershell/module/servermanager/install-windowsfeature?view=windowsserver2025-ps
+- Networking PowerShell reference: https://learn.microsoft.com/powershell/module/nettcpip/
+- DNS Client PowerShell reference: https://learn.microsoft.com/powershell/module/dnsclient/
+- Storage PowerShell reference: https://learn.microsoft.com/powershell/module/storage/
