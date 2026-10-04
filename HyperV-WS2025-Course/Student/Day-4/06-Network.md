@@ -1,13 +1,16 @@
 # Module 06 — Network Break/Fix
 
+## Introduction
+
+A network outage can originate in the guest, the virtual NIC, the virtual switch, the host-side Internal adapter, NAT, routing, DNS, or an application port. This incident practices testing those layers in a fixed order.
 
 ## Concepts to keep in mind
 
 Start from the nearest dependency and move outward. If SRV01 cannot reach 172.22.0.1, there is little value in testing public DNS first.
 
-## Introduction
+## What you will do
 
-A network outage can originate in the guest, the virtual NIC, the virtual switch, the host-side Internal adapter, NAT, routing, DNS, or an application port. This incident practices testing those layers in a fixed order.
+Move SRV01 to vSW-Private, work only from the symptom, inspect the Hyper-V vNIC/switch layer, then the HV01 lab network and guest TCP/IP stack, and finally restore vSW-Lab.
 
 ## Guided fault — wrong switch
 
@@ -56,21 +59,13 @@ Troubleshoot adapter -> IP -> local subnet -> gateway -> NAT -> DNS -> applicati
 Connect-VMNetworkAdapter -VMName SRV01 -SwitchName "vSW-Lab"
 ~~~
 
-
-## What you will do
-
-Move SRV01 to vSW-Private, work only from the symptom, inspect the Hyper-V vNIC/switch layer, then the HV01 lab network and guest TCP/IP stack, and finally restore vSW-Lab.
-
-
 ## What you should observe
 
 SRV01 keeps its guest IP configuration but loses the Layer-2 path to the host-side 172.22.0.1 gateway.
 
-
 ## Validation checkpoint
 
 State the specific evidence that rules out guest IP configuration and identifies the wrong virtual-switch attachment.
-
 
 ## Expected end state
 
