@@ -1,13 +1,16 @@
 # Day 1 — Windows Server 2025 Fundamentals
 
+## Introduction
+
+Day 1 establishes the Windows Server habits the rest of the course relies on. The focus is not just making HV01 work, but learning how to inspect, configure, verify, and troubleshoot a server before Hyper-V is introduced.
 
 ## Concepts to keep in mind
 
 The same pattern will repeat all week: understand the layer, inspect current state, make a controlled change, verify the result, and keep enough evidence to troubleshoot if the result is unexpected.
 
-## Introduction
+## What you will do
 
-Day 1 establishes the Windows Server habits the rest of the course relies on. The focus is not just making HV01 work, but learning how to inspect, configure, verify, and troubleshoot a server before Hyper-V is introduced.
+Follow the modules in order so that networking, storage, PowerShell, and installation media are all ready before Day 2.
 
 ## Sequence
 
@@ -21,20 +24,14 @@ Day 1 establishes the Windows Server habits the rest of the course relies on. Th
 8. [Break/Fix — DNS](08-Break-Fix-DNS.md)
 9. [Day 1 check](99-Day-1-Check.md)
 
-## Expected end state
-
-HV01 has a validated Windows Server configuration, a D: Hyper-V data volume, the course folder structure, the Windows Server ISO staged inside HV01, and a known-good outer network.
-
-## What you will do
-
-Follow the modules in order so that networking, storage, PowerShell, and installation media are all ready before Day 2.
-
-
 ## What you should observe
 
 At the end of the day, HV01 should be a known-good Windows Server platform rather than merely an installed operating system.
 
-
 ## Validation checkpoint
 
 Use the Day 1 validation module before proceeding to Hyper-V.
+
+## Expected end state
+
+HV01 has a validated Windows Server configuration, a D: Hyper-V data volume, the course folder structure, the Windows Server ISO staged inside HV01, and a known-good outer network.
