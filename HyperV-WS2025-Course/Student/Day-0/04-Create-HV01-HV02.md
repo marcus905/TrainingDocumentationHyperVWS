@@ -48,3 +48,8 @@ Inspect VM, processor, hard-disk, DVD, and network-adapter configuration before 
 ## Expected end state
 
 HV01 and HV02 exist with matching outer architecture and are ready for Windows Server installation.
+
+
+## What you will do
+
+Create both Generation 2 outer VMs with the agreed CPU, static memory, OS/data disks, ISO attachment, and vSW-Course network adapter, then inspect the resulting virtual hardware.
