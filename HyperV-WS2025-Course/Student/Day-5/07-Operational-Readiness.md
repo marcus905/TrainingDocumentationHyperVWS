@@ -8,10 +8,13 @@ Before a workload is called production-ready, configuration, monitoring, backup,
 
 Decide whether a workload is ready to be operated and recovered.
 
-
 ## Concepts to keep in mind
 
 Readiness is broader than 'the VM starts.' A workload can be technically functional but operationally weak if recovery is untested, dependencies are undocumented, monitoring is absent, or storage capacity is unhealthy.
+
+## What you will do
+
+Use the host, VM, and recovery checklists against the current lab and mark which items are validated, assumed, or intentionally out of scope.
 
 ## Host
 
@@ -43,21 +46,13 @@ Readiness is broader than 'the VM starts.' A workload can be technically functio
 
 Operational readiness requires both configuration and recovery confidence.
 
-
-## What you will do
-
-Use the host, VM, and recovery checklists against the current lab and mark which items are validated, assumed, or intentionally out of scope.
-
-
 ## What you should observe
 
 Several readiness items require evidence from earlier days—Replica health, storage capacity, Secure Boot, baseline configuration—while others require documentation or organizational process.
 
-
 ## Validation checkpoint
 
 For any unchecked item, state whether it is a blocker, an accepted lab limitation, or a production follow-up action.
-
 
 ## Expected end state
 
