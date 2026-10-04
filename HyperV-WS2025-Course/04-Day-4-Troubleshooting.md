@@ -411,9 +411,25 @@ Exact counter availability can vary with host configuration.
 
 # Scenario 4.1 — CPU bottleneck
 
-## Fault model
+## Part A — Create the fault
 
-The instructor creates a controlled CPU-heavy workload inside SRV01.
+Inside SRV01, start a bounded CPU workload:
+
+~~~powershell
+1..400000 | ForEach-Object { [math]::Sqrt($_) } | Out-Null
+~~~
+
+If the command finishes too quickly to observe, run it several times while Task Manager is open.
+
+Do not use an infinite loop.
+
+## Part B — Incident symptom
+
+Treat the environment as if a user reported:
+
+> SRV01 feels slow and CPU usage appears unusually high.
+
+From this point onward, troubleshoot from evidence rather than from memory of the break command.
 
 ## Student objective
 
@@ -481,9 +497,34 @@ First prove that CPU is the constrained resource and identify whether the constr
 
 # Scenario 4.2 — Memory pressure
 
-## Fault model
+## Part A — Create the fault
 
-The instructor reduces SRV01's usable memory range or starts additional workloads to create memory pressure.
+On HV01, shut down SRV01 cleanly:
+
+~~~powershell
+Stop-VM SRV01
+~~~
+
+Record the current memory configuration:
+
+~~~powershell
+Get-VMMemory SRV01
+~~~
+
+Then constrain the VM:
+
+~~~powershell
+Set-VMMemory -VMName SRV01 -DynamicMemoryEnabled $true -MinimumBytes 512MB -StartupBytes 1GB -MaximumBytes 1GB
+Start-VM SRV01
+~~~
+
+Allow the guest to boot fully.
+
+## Part B — Incident symptom
+
+Treat the environment as if a user reported:
+
+> SRV01 is responsive after boot but becomes sluggish when normal services and applications are active.
 
 ## Evidence sources
 
@@ -527,13 +568,51 @@ Depending on evidence:
 
 The correction should match the proven bottleneck.
 
+## Reset
+
+After completing the investigation, restore the normal lab values:
+
+~~~powershell
+Stop-VM SRV01
+Set-VMMemory -VMName SRV01 -DynamicMemoryEnabled $true -MinimumBytes 1GB -StartupBytes 2GB -MaximumBytes 4GB
+Start-VM SRV01
+~~~
+
+Verify:
+
+~~~powershell
+Get-VMMemory SRV01
+~~~
+
 ---
 
 # Scenario 4.3 — Storage latency
 
-## Fault model
+## Part A — Create the fault
 
-The instructor creates controlled guest I/O or leaves a checkpoint chain in place while disk activity occurs.
+On HV01, create a temporary checkpoint:
+
+~~~powershell
+Checkpoint-VM -VMName "SRV01" -SnapshotName "Day4-Storage-Test"
+~~~
+
+Inside SRV01, generate controlled file writes:
+
+~~~powershell
+New-Item -ItemType Directory -Path "C:\LabIO" -Force
+
+1..2000 | ForEach-Object {
+    "Day4 test data $_" | Out-File "C:\LabIO\file-$_.txt"
+}
+~~~
+
+The goal is to create observable write activity and AVHDX growth, not to fill the disk.
+
+## Part B — Incident symptom
+
+Treat the environment as if a user reported:
+
+> SRV01 storage activity has increased and the VM feels slower during file operations.
 
 ## Layer model
 
@@ -602,20 +681,65 @@ Evidence may justify:
 - reducing competing I/O;
 - repairing an incorrect storage layout.
 
+## Reset
+
+Remove the temporary checkpoint:
+
+~~~powershell
+Remove-VMSnapshot -VMName "SRV01" -Name "Day4-Storage-Test"
+~~~
+
+Inside SRV01, remove the generated files:
+
+~~~powershell
+Remove-Item "C:\LabIO" -Recurse -Force
+~~~
+
+Verify that the checkpoint merge completes before starting another storage scenario.
+
 ---
 
 # Scenario 4.4 — Virtual network failure
 
-## Possible instructor faults
+## Part A — Create the fault
 
-- wrong virtual switch;
-- disconnected vNIC;
-- incorrect guest subnet;
-- wrong default gateway;
-- wrong DNS;
-- missing LabNAT;
-- duplicate IP;
-- incorrect VLAN configuration where VLANs are demonstrated.
+Use one of the following student-executable faults. For the guided lab, use **Fault A**.
+
+### Fault A — Wrong virtual switch
+
+On HV01:
+
+~~~powershell
+Connect-VMNetworkAdapter -VMName SRV01 -SwitchName "vSW-Private"
+~~~
+
+### Fault B — Bad DNS
+
+Inside SRV01:
+
+~~~powershell
+Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses 172.22.0.254
+~~~
+
+### Fault C — Disconnect the vNIC
+
+On HV01:
+
+~~~powershell
+Disconnect-VMNetworkAdapter -VMName SRV01
+~~~
+
+## Part B — Incident symptom
+
+For Fault A or C:
+
+> SRV01 has lost network connectivity.
+
+For Fault B:
+
+> SRV01 can reach IP addresses, but hostname-based access fails.
+
+Do not look back at the break step while troubleshooting.
 
 ## Hyper-V layer
 
@@ -671,17 +795,59 @@ Application port
 
 Do not start with DNS if the VM cannot reach its gateway.
 
+## Reset
+
+For Fault A:
+
+~~~powershell
+Connect-VMNetworkAdapter -VMName SRV01 -SwitchName "vSW-Lab"
+~~~
+
+For Fault B:
+
+~~~powershell
+Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses 1.1.1.1
+~~~
+
+For Fault C:
+
+~~~powershell
+Connect-VMNetworkAdapter -VMName SRV01 -SwitchName "vSW-Lab"
+~~~
+
+Repeat the Day 2 connectivity matrix after reset.
+
 ---
 
 # Scenario 4.5 — Hyper-V management problem
 
-## Symptom examples
+## Part A — Create the fault
 
-- Hyper-V Manager cannot enumerate VMs;
-- a VM cannot start;
-- VM operations remain stuck;
-- management works for some VMs but not others;
-- PowerShell cmdlets fail.
+Create a disposable VM configuration with a missing disk dependency:
+
+~~~powershell
+New-VM -Name "BROKEN01" -Generation 2 -MemoryStartupBytes 1GB -Path "D:\Hyper-V\VMs" -NoVHD
+~~~
+
+Attach a deliberately nonexistent VHDX path:
+
+~~~powershell
+Add-VMHardDiskDrive -VMName "BROKEN01" -Path "D:\Hyper-V\VHDX\MISSING-DISK.vhdx"
+~~~
+
+Attempt to start it:
+
+~~~powershell
+Start-VM BROKEN01
+~~~
+
+The start operation should fail because the storage dependency is invalid.
+
+## Part B — Incident symptom
+
+Treat the environment as if a user reported:
+
+> BROKEN01 exists in Hyper-V Manager but cannot start.
 
 ## Step 1 — Establish scope
 
@@ -727,13 +893,43 @@ A VM start failure can originate from:
 
 Do not restart VMMS as the first troubleshooting step unless service restoration has priority and evidence has already been captured.
 
+## Reset
+
+Remove the disposable VM:
+
+~~~powershell
+Remove-VM -Name "BROKEN01" -Force
+~~~
+
+No production lab VM should be modified by this scenario.
+
 ---
 
 # Scenario 4.6 — Checkpoint growth
 
-## Fault model
+## Part A — Create the fault
 
-A checkpoint is created and guest write activity is generated.
+On HV01:
+
+~~~powershell
+Checkpoint-VM -VMName "SRV01" -SnapshotName "Day4-Checkpoint-Growth"
+~~~
+
+Inside SRV01:
+
+~~~powershell
+New-Item -ItemType Directory -Path "C:\CheckpointGrowth" -Force
+
+1..3000 | ForEach-Object {
+    "Checkpoint growth test $_" | Out-File "C:\CheckpointGrowth\data-$_.txt"
+}
+~~~
+
+## Part B — Incident symptom
+
+Treat the environment as if a monitoring alert reported:
+
+> Free space on the Hyper-V data volume is decreasing while SRV01 continues to run normally.
 
 ## Evidence
 
@@ -765,6 +961,20 @@ Underlying slow storage
 ~~~
 
 A checkpoint by itself is not automatically a fault.
+
+## Reset
+
+~~~powershell
+Remove-VMSnapshot -VMName "SRV01" -Name "Day4-Checkpoint-Growth"
+~~~
+
+Inside SRV01:
+
+~~~powershell
+Remove-Item "C:\CheckpointGrowth" -Recurse -Force
+~~~
+
+Wait for checkpoint merge activity to complete and confirm free space is stable.
 
 ---
 
@@ -1048,50 +1258,268 @@ No documented network validation checklist after VM changes.
 
 ---
 
-# End-of-day challenge — Independent incident
+# End-of-day challenge — Local incident drill
 
-Students receive an environment containing multiple symptoms.
+The end-of-day challenge is designed for remote delivery where each student controls their own lab.
 
-The instructor should inject two or three faults from different layers.
+Students are assigned **two scenario codes** by the instructor.
 
-Example combination:
+Each student:
 
-- wrong SRV01 DNS server;
-- low free space on HV01;
-- unnecessary checkpoint;
-- disconnected VM network adapter;
-- constrained VM memory;
-- unhealthy Replica connection.
+1. opens only the assigned Break Recipe sections;
+2. applies both faults locally;
+3. closes or scrolls past the break instructions;
+4. troubleshoots the resulting environment using the Day 4 process;
+5. corrects each fault;
+6. validates the environment;
+7. presents a short root-cause report.
 
-## Student rules
+The objective is not to guess which command was run. The objective is to prove the diagnosis with evidence.
 
-Students should not ask:
+## Scenario pool
 
-> What did you break?
+### Scenario A — DNS failure
 
-Instead, they should:
+#### Break recipe
 
-1. define each symptom;
-2. determine whether symptoms are related;
-3. collect evidence;
-4. prioritize based on impact;
-5. build hypotheses;
-6. test one hypothesis at a time;
-7. apply corrective actions;
-8. revalidate the environment;
-9. deliver a short root-cause report.
+Inside SRV01:
 
-## Deliverable
+~~~powershell
+Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses 172.22.0.254
+~~~
 
-Students should present:
+#### Symptom
 
-- problem statement;
-- scope;
-- evidence;
-- root cause;
-- remediation;
-- verification;
-- preventive recommendation.
+> SRV01 can reach external IP addresses but cannot access resources by hostname.
+
+#### Reset
+
+~~~powershell
+Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses 1.1.1.1
+~~~
+
+---
+
+### Scenario B — Wrong virtual switch
+
+#### Break recipe
+
+On HV01:
+
+~~~powershell
+Connect-VMNetworkAdapter -VMName SRV01 -SwitchName "vSW-Private"
+~~~
+
+#### Symptom
+
+> SRV01 has lost normal lab-network connectivity.
+
+#### Reset
+
+~~~powershell
+Connect-VMNetworkAdapter -VMName SRV01 -SwitchName "vSW-Lab"
+~~~
+
+---
+
+### Scenario C — Constrained VM memory
+
+#### Break recipe
+
+On HV01:
+
+~~~powershell
+Stop-VM SRV01
+Set-VMMemory -VMName SRV01 -DynamicMemoryEnabled $true -MinimumBytes 512MB -StartupBytes 1GB -MaximumBytes 1GB
+Start-VM SRV01
+~~~
+
+#### Symptom
+
+> SRV01 starts successfully but becomes sluggish under normal activity.
+
+#### Reset
+
+~~~powershell
+Stop-VM SRV01
+Set-VMMemory -VMName SRV01 -DynamicMemoryEnabled $true -MinimumBytes 1GB -StartupBytes 2GB -MaximumBytes 4GB
+Start-VM SRV01
+~~~
+
+---
+
+### Scenario D — Checkpoint growth
+
+#### Break recipe
+
+On HV01:
+
+~~~powershell
+Checkpoint-VM -VMName "SRV01" -SnapshotName "EOD-Checkpoint"
+~~~
+
+Inside SRV01:
+
+~~~powershell
+New-Item -ItemType Directory -Path "C:\EODGrowth" -Force
+1..3000 | ForEach-Object {
+    "EOD checkpoint test $_" | Out-File "C:\EODGrowth\file-$_.txt"
+}
+~~~
+
+#### Symptom
+
+> Free space on the Hyper-V data volume is decreasing while SRV01 remains online.
+
+#### Reset
+
+On HV01:
+
+~~~powershell
+Remove-VMSnapshot -VMName "SRV01" -Name "EOD-Checkpoint"
+~~~
+
+Inside SRV01:
+
+~~~powershell
+Remove-Item "C:\EODGrowth" -Recurse -Force
+~~~
+
+---
+
+### Scenario E — Replica HTTPS blocked
+
+#### Break recipe
+
+On HV02, locate the Hyper-V Replica HTTPS firewall rule:
+
+~~~powershell
+Get-NetFirewallRule | Where-Object DisplayName -like "*Replica*"
+~~~
+
+Disable the HTTPS Replica listener rule identified in the output:
+
+~~~powershell
+Disable-NetFirewallRule -Name "<rule name>"
+~~~
+
+#### Symptom
+
+> SRV01 replication is unhealthy and HV01 cannot complete the Replica connection test.
+
+#### Reset
+
+~~~powershell
+Enable-NetFirewallRule -Name "<rule name>"
+~~~
+
+Validate:
+
+~~~powershell
+Get-VMReplication SRV01
+Measure-VMReplication SRV01
+~~~
+
+---
+
+### Scenario F — Missing VM storage dependency
+
+#### Break recipe
+
+Create a disposable VM with an invalid disk reference:
+
+~~~powershell
+New-VM -Name "BROKEN01" -Generation 2 -MemoryStartupBytes 1GB -Path "D:\Hyper-V\VMs" -NoVHD
+Add-VMHardDiskDrive -VMName "BROKEN01" -Path "D:\Hyper-V\VHDX\MISSING-DISK.vhdx"
+Start-VM BROKEN01
+~~~
+
+#### Symptom
+
+> BROKEN01 is visible in Hyper-V Manager but cannot start.
+
+#### Reset
+
+~~~powershell
+Remove-VM -Name "BROKEN01" -Force
+~~~
+
+---
+
+## Pairing guidance for the instructor
+
+Prefer pairings that affect different layers.
+
+Good examples:
+
+~~~text
+A + D   DNS + checkpoint/storage
+B + C   virtual networking + memory
+E + F   Replica + VM storage dependency
+A + C   DNS + memory
+B + D   virtual networking + checkpoint/storage
+C + E   memory + Replica
+~~~
+
+Avoid pairing two faults that create nearly identical symptoms unless the class is very advanced.
+
+## Challenge modes
+
+### Level 1 — Guided
+
+Students may use the Day 4 scenario checklists and command suggestions.
+
+### Level 2 — Independent
+
+Students receive only the symptom statements and may use normal administration tools and Microsoft documentation.
+
+### Level 3 — Oral defense
+
+After remediation, the instructor asks questions such as:
+
+- What evidence ruled out the host?
+- What evidence proved the failing layer?
+- What other hypothesis did you consider?
+- Why was this the root cause rather than a contributing factor?
+- What would you check next if the correction had failed?
+- What preventive action would reduce recurrence?
+
+## Required deliverable
+
+~~~text
+Problem statement:
+
+Scope:
+
+Impact:
+
+Evidence collected:
+
+Hypotheses considered:
+
+Root cause 1:
+
+Corrective action 1:
+
+Validation 1:
+
+Root cause 2:
+
+Corrective action 2:
+
+Validation 2:
+
+Preventive recommendations:
+~~~
+
+## Completion criteria
+
+- both faults identified through evidence;
+- corrective actions applied;
+- normal lab state restored;
+- no unrelated configuration changed;
+- root causes clearly separated from contributing factors;
+- student can defend the troubleshooting path.
 
 ---
 
@@ -1134,7 +1562,8 @@ Students should present:
 - [ ] Legacy/misconfiguration risks reviewed.
 - [ ] Evidence package created.
 - [ ] Root-cause report completed.
-- [ ] End-of-day independent incident completed.
+- [ ] Student can create and reset controlled faults locally.
+- [ ] End-of-day two-fault incident drill completed.
 
 ---
 
