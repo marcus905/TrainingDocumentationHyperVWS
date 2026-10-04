@@ -8,6 +8,16 @@ Hyper-V will create many files during the week, so HV01 needs a dedicated data v
 
 Initialize the dedicated 200 GB Day 0 training disk and prepare Hyper-V folders.
 
+## Concepts to keep in mind
+
+Disk, partition, volume, file system, and folder are different storage layers. Initialization and formatting should only follow positive identification of the intended training disk.
+
+## What you will do
+
+Identify the approximately 200 GB raw disk, initialize it as GPT, create and format D:, then build the course Hyper-V folder structure.
+
+## Hands-on / detailed content
+
 ~~~powershell
 Get-Disk
 ~~~
@@ -25,11 +35,6 @@ New-Item -ItemType Directory -Path "D:\Hyper-V\Replica" -Force
 New-Item -ItemType Directory -Path "D:\Hyper-V\Export" -Force
 ~~~
 
-
-## Concepts to keep in mind
-
-Disk, partition, volume, file system, and folder are different storage layers. Initialization and formatting should only follow positive identification of the intended training disk.
-
 ## Validation
 
 ~~~powershell
@@ -37,20 +42,13 @@ Get-Volume -DriveLetter D
 Get-ChildItem D:\Hyper-V
 ~~~
 
-## What you will do
-
-Identify the approximately 200 GB raw disk, initialize it as GPT, create and format D:, then build the course Hyper-V folder structure.
-
-
 ## What you should observe
 
 The raw training disk becomes an NTFS volume while the OS disk remains untouched. The predictable folder structure will be reused throughout the week.
 
-
 ## Validation checkpoint
 
 Confirm the correct disk was selected, D: is healthy NTFS, and VMs/VHDX/ISO/Replica/Export folders exist.
-
 
 ## Expected end state
 
