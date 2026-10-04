@@ -8,17 +8,22 @@ Recovery and availability depend heavily on the storage architecture underneath 
 
 Compare DR, migration, HA and storage architectures.
 
+## Concepts to keep in mind
+
+Live Migration moves compute, Storage Migration moves files, Replica maintains a recovery copy, and Failover Clustering provides coordinated high availability. Local, SMB, SAN, CSV, and S2D designs have different failure domains and operational models.
+
+## What you will do
+
+Compare each technology against maintenance, DR, HA, performance, and storage-failure scenarios and map where VM configuration and disks live in each design.
+
+## Hands-on / detailed content
+
 | Technology | Typical use |
 |---|---|
 | Live Migration | Move running compute |
 | Storage Migration | Move VM files |
 | Hyper-V Replica | Maintain a DR copy |
 | Failover Clustering | High availability |
-
-
-## Concepts to keep in mind
-
-Live Migration moves compute, Storage Migration moves files, Replica maintains a recovery copy, and Failover Clustering provides coordinated high availability. Local, SMB, SAN, CSV, and S2D designs have different failure domains and operational models.
 
 ## Storage architectures
 
@@ -36,21 +41,13 @@ Evaluate capacity, latency, throughput, resiliency, backup, growth, failure doma
 
 Explain why the simple local storage used in this lab is useful for training but does not provide clustered high availability.
 
-
-## What you will do
-
-Compare each technology against maintenance, DR, HA, performance, and storage-failure scenarios and map where VM configuration and disks live in each design.
-
-
 ## What you should observe
 
 A technology can solve one problem while leaving another untouched: for example, Live Migration does not create a DR copy and local storage does not provide clustered resiliency.
 
-
 ## Validation checkpoint
 
 Given a customer requirement, choose an appropriate migration/recovery/storage approach and state its main limitation.
-
 
 ## Expected end state
 
