@@ -8,6 +8,16 @@ The end-of-day drill combines two faults so you must prioritize and separate ind
 
 Diagnose two locally created faults using evidence, not memory.
 
+## Concepts to keep in mind
+
+Two simultaneous faults do not necessarily share one root cause. Treat each symptom as a separate problem statement until evidence shows a relationship.
+
+## What you will do
+
+Apply the two assigned scenario codes, stop reading the break recipes, inventory the environment, investigate, prove both root causes, correct them in risk order, and produce the required report.
+
+## Hands-on / detailed content
+
 The instructor assigns two scenario codes.
 
 ### A — DNS failure
@@ -28,11 +38,6 @@ Disable the HV02 HTTPS Replica firewall rule.
 ### F — Missing VM storage dependency
 Use the BROKEN01 move-the-attached-VHDX recipe.
 
-
-## Concepts to keep in mind
-
-Two simultaneous faults do not necessarily share one root cause. Treat each symptom as a separate problem statement until evidence shows a relationship.
-
 ## Student mission
 
 1. Apply only the assigned break recipes.
@@ -50,21 +55,13 @@ For each incident record symptom, scope, impact, evidence, hypotheses, root caus
 
 Use the canonical Day 4 guide for exact reset commands.
 
-
-## What you will do
-
-Apply the two assigned scenario codes, stop reading the break recipes, inventory the environment, investigate, prove both root causes, correct them in risk order, and produce the required report.
-
-
 ## What you should observe
 
 One correction may restore one symptom while the second remains. That is useful evidence that the incidents are independent rather than one cascading failure.
 
-
 ## Validation checkpoint
 
 Your report should contain separate scope, evidence, root cause, correction, validation, and prevention for both assigned faults.
-
 
 ## Expected end state
 
