@@ -44,3 +44,8 @@ Explain what each stage of a simple pipeline does and identify the current Power
 ## Expected end state
 
 You can discover an unfamiliar command, read its help, filter its output, and interpret a basic error without guessing.
+
+
+## What you will do
+
+Run the discovery/help examples, build the sample pipeline, and explain what each stage does rather than copying it mechanically.
