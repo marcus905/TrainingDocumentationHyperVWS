@@ -514,6 +514,161 @@ Before continuing, students should be able to answer:
 
 ---
 
+# Module 0B — Hyper-V PowerShell Orientation
+
+## Why introduce Hyper-V PowerShell on Day 1?
+
+Hyper-V is not installed inside HV01 until Day 2, but the **physical Windows 11 host already runs Hyper-V** and already contains HV01 and HV02.
+
+That gives students a safe opportunity to learn the Hyper-V PowerShell vocabulary before they begin configuring the nested Hyper-V host.
+
+This section is intentionally **read-only**. Students should use it to discover and inspect Hyper-V objects on the physical host, not to experiment with configuration-changing commands.
+
+## Connect the general PowerShell primer to Hyper-V
+
+The same patterns introduced in Module 0 apply directly to the Hyper-V module:
+
+~~~text
+Get-Command
+Get-Help
+objects
+pipeline
+Where-Object
+Select-Object
+~~~
+
+The main new skill is learning common Hyper-V nouns:
+
+~~~text
+VM
+VMHost
+VMProcessor
+VMMemory
+VMNetworkAdapter
+VMSwitch
+VMHardDiskDrive
+VHD
+VMFirmware
+VMSnapshot
+VMReplication
+~~~
+
+Typical verbs indicate intent:
+
+~~~text
+Get-*       inspect
+New-*       create
+Set-*       change
+Add-*       attach
+Connect-*   connect
+Start-*     start
+Stop-*      stop
+Remove-*    remove
+~~~
+
+The verb is a useful risk signal, but students should still read command help before execution.
+
+## Run this section on the physical Windows 11 host
+
+Confirm the Hyper-V module is available:
+
+~~~powershell
+Get-Module -ListAvailable Hyper-V
+~~~
+
+Discover Hyper-V commands:
+
+~~~powershell
+Get-Command -Module Hyper-V
+~~~
+
+Search by noun or keyword:
+
+~~~powershell
+Get-Command -Module Hyper-V -Noun VM
+Get-Command -Module Hyper-V -Noun VMSwitch
+Get-Command -Module Hyper-V -Name "*VHD*"
+~~~
+
+Read examples:
+
+~~~powershell
+Get-Help Get-VM -Examples
+Get-Help Get-VMNetworkAdapter -Examples
+~~~
+
+## Inspect the existing outer lab
+
+~~~powershell
+Get-VM
+~~~
+
+Select useful properties:
+
+~~~powershell
+Get-VM |
+    Select-Object Name,State,Generation,ProcessorCount,MemoryAssigned
+~~~
+
+Inspect HV01:
+
+~~~powershell
+Get-VM -Name HV01
+Get-VMProcessor -VMName HV01
+Get-VMMemory -VMName HV01
+Get-VMNetworkAdapter -VMName HV01
+Get-VMHardDiskDrive -VMName HV01
+Get-VMFirmware -VMName HV01
+~~~
+
+Inspect virtual networking:
+
+~~~powershell
+Get-VMSwitch
+
+Get-VMNetworkAdapter -VMName HV01,HV02 |
+    Select-Object VMName,Name,SwitchName,MacAddress,Status
+~~~
+
+Inspect host defaults:
+
+~~~powershell
+Get-VMHost |
+    Select-Object VirtualMachinePath,VirtualHardDiskPath,LogicalProcessorCount
+~~~
+
+## Apply the pipeline model
+
+~~~powershell
+Get-VM |
+    Where-Object State -eq "Running" |
+    Select-Object Name,State,ProcessorCount,MemoryAssigned
+~~~
+
+This is the same object-and-pipeline model students just used with Windows services and networking.
+
+## Safety rule
+
+During this Day 1 orientation, use read-only inspection commands unless the instructor explicitly directs otherwise.
+
+Do not experiment with configuration-changing Hyper-V commands on the physical host.
+
+Day 2 provides controlled opportunities to use New-, Set-, Connect-, Start-, Stop- and Remove- cmdlets inside HV01.
+
+## Primer checkpoint
+
+Students should be able to answer:
+
+1. Which PowerShell module provides Hyper-V cmdlets?
+2. How can you discover commands related to virtual disks?
+3. What is the difference between Get-VM and Get-VMHost?
+4. Which cmdlet inspects a VM's vNIC and switch mapping?
+5. Which cmdlet inspects VM memory configuration?
+6. Why is the physical Windows 11 host used for this Day 1 orientation?
+7. Why are read-only Get-* commands emphasized here?
+
+---
+
 # Module 1 — Windows Server 2025 architecture and installation options
 
 ## Concepts
