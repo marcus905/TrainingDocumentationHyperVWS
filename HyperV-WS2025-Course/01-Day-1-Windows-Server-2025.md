@@ -1880,12 +1880,15 @@ Students should be able to answer:
 8. How does the WhatIf pattern reduce risk before a configuration change?
 9. How does Get-WindowsFeature | Where-Object Installed reuse the object-and-pipeline model from the primer?
 10. Why is consistent folder structure useful in server administration?
+11. What is the difference between Get-VM and Get-VMHost?
+12. Which Hyper-V cmdlet shows a VM's virtual network adapter and switch mapping?
 
 ---
 
 # End-of-day validation checklist
 
 - [ ] Windows Server edition/build identified.
+- [ ] Hyper-V PowerShell orientation completed on the physical host.
 - [ ] Server name verified.
 - [ ] Time and time zone checked.
 - [ ] Network interfaces inspected.
