@@ -13,6 +13,14 @@ Microsoft reference:
 
 https://learn.microsoft.com/windows-server/virtualization/hyper-v/host-hardware-requirements
 
+### TPM clarification
+
+Windows 11 requires TPM 2.0 for a supported physical installation.
+
+This is separate from the **virtual TPM (vTPM)** that can be enabled for a Generation 2 Hyper-V guest. Hyper-V emulates the guest vTPM independently of the host TPM presence/version.
+
+If the optional Windows 11 CLIENT01 VM is used later, configure Generation 2, Secure Boot, a local key protector and vTPM rather than using Windows Setup requirement bypasses.
+
 ## Recommended physical workstation
 | Resource | Minimum | Recommended |
 |---|---:|---:|
