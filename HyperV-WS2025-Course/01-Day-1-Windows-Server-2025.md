@@ -12,7 +12,8 @@ By the end of Day 1, students should be able to:
 - configure IPv4 addressing, DNS and basic routing;
 - inspect and configure local storage;
 - validate a newly deployed server;
-- troubleshoot common post-installation issues using evidence.
+- troubleshoot common post-installation issues using evidence;
+- use the Hyper-V PowerShell module for read-only inspection of the outer lab.
 
 ---
 
@@ -1769,11 +1770,23 @@ Do not proceed to Day 2 until the ISO is present inside HV01.
 
 # Break/Fix 1 — DNS failure
 
-## Scenario
+## Prepare the controlled fault
 
-The instructor intentionally configures an incorrect DNS server.
+The student creates the DNS fault locally so the remote course does not depend on instructor access to the student's machine.
 
-The student is told only:
+First record the known-good DNS configuration:
+
+~~~powershell
+Get-DnsClientServerAddress -InterfaceAlias "Ethernet" -AddressFamily IPv4
+~~~
+
+Then configure the controlled invalid DNS server:
+
+~~~powershell
+Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses 192.168.240.254
+~~~
+
+After applying the fault, stop looking at the break instructions and work only from the incident symptom:
 
 > The server appears to have network connectivity, but accessing resources by hostname fails.
 
@@ -1834,7 +1847,15 @@ Students should report:
 
 Only then should the DNS configuration be corrected.
 
-## Validate after correction
+## Correct and validate
+
+Restore the course baseline DNS value:
+
+~~~powershell
+Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses 1.1.1.1
+~~~
+
+Then validate:
 
 ~~~powershell
 Resolve-DnsName microsoft.com
@@ -1877,6 +1898,7 @@ Students should be able to answer:
 - [ ] Training data disk initialized safely.
 - [ ] NTFS volume created and verified.
 - [ ] Hyper-V folder structure created.
+- [ ] Windows Server ISO staged inside HV01 for Day 2.
 - [ ] DNS break/fix scenario completed using evidence.
 - [ ] Student can explain the reasoning behind the commands used.
 
