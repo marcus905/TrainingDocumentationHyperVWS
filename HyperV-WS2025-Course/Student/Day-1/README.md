@@ -15,14 +15,15 @@ Follow the modules in order so that networking, storage, PowerShell, and install
 ## Sequence
 
 1. [PowerShell essentials](01-PowerShell-Essentials.md)
-2. [Architecture and Windows Server 2025](02-Architecture-and-WS2025.md)
-3. [Initial server configuration](03-Initial-Configuration.md)
-4. [Roles, features and tools](04-Roles-Features-and-Tools.md)
-5. [Networking](05-Networking.md)
-6. [Local storage](06-Local-Storage.md)
-7. [Stage installation media](07-Stage-Installation-Media.md)
-8. [Break/Fix — DNS](08-Break-Fix-DNS.md)
-9. [Day 1 check](99-Day-1-Check.md)
+2. [Hyper-V PowerShell primer](02-Hyper-V-PowerShell-Primer.md)
+3. [Architecture and Windows Server 2025](03-Architecture-and-WS2025.md)
+4. [Initial server configuration](04-Initial-Configuration.md)
+5. [Roles, features and tools](05-Roles-Features-and-Tools.md)
+6. [Networking](06-Networking.md)
+7. [Local storage](07-Local-Storage.md)
+8. [Stage installation media](08-Stage-Installation-Media.md)
+9. [Break/Fix — DNS](09-Break-Fix-DNS.md)
+10. [Day 1 check](99-Day-1-Check.md)
 
 ## What you should observe
 
