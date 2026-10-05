@@ -23,6 +23,16 @@ Run the platform checks, enable Hyper-V if required, restart when necessary, and
 - hardware virtualization and SLAT;
 - local administrator rights.
 
+## TPM note for this course
+
+A supported Windows 11 physical workstation normally requires TPM 2.0 as part of the Windows 11 platform requirements.
+
+That physical TPM requirement should not be confused with the **virtual TPM (vTPM)** used by an optional Windows 11 guest later in the course.
+
+Hyper-V can present an emulated vTPM to a Generation 2 VM independently of the Hyper-V host TPM presence/version. The optional Day 2 CLIENT01 module shows the supported VM configuration.
+
+Do not disable or bypass the physical workstation's Windows 11 security requirements for this course.
+
 ## Resource baseline
 
 | Resource | Minimum | Recommended |
