@@ -1250,6 +1250,120 @@ Get-VMHardDiskDrive DC01
 
 ---
 
+# Optional Module — Windows 11 CLIENT01 and vTPM readiness
+
+CLIENT01 is optional in the core course.
+
+If a Windows 11 guest is used for client/server testing or future Active Directory extensions, configure it to meet Microsoft's supported Hyper-V VM requirements rather than bypassing Windows Setup checks.
+
+Microsoft documents the following requirements for Windows 11 virtual machines:
+
+- Generation 2;
+- Secure Boot enabled;
+- virtual TPM enabled;
+- at least 4 GB RAM;
+- at least 64 GB storage;
+- at least two virtual processors.
+
+The underlying host processor must also meet the applicable Windows 11 processor requirements.
+
+A useful Hyper-V detail is that the virtual TPM presented to the guest is emulated independently of the Hyper-V host TPM presence or version.
+
+## Recommended CLIENT01 baseline
+
+~~~text
+Name:          CLIENT01
+Generation:    2
+vCPU:          2
+Startup RAM:   4 GB
+VHDX:          64 GB or larger
+Switch:        vSW-Lab
+Guest IP:      172.22.0.100/24
+Gateway:       172.22.0.1
+Secure Boot:   Enabled
+vTPM:          Enabled
+~~~
+
+CLIENT01 increases nested-memory pressure, so it should remain optional and should run only when the physical workstation has sufficient RAM.
+
+## Create the VM
+
+~~~powershell
+New-VM -Name "CLIENT01" -Generation 2 -MemoryStartupBytes 4GB -Path "D:\Hyper-V\VMs" -NewVHDPath "D:\Hyper-V\VHDX\CLIENT01.vhdx" -NewVHDSizeBytes 64GB -SwitchName "vSW-Lab"
+
+Set-VMProcessor -VMName "CLIENT01" -Count 2
+~~~
+
+Keep the VM powered off while configuring security.
+
+## Verify Secure Boot
+
+~~~powershell
+Get-VMFirmware -VMName "CLIENT01" |
+    Select-Object SecureBoot
+~~~
+
+If required:
+
+~~~powershell
+Set-VMFirmware -VMName "CLIENT01" -EnableSecureBoot On
+~~~
+
+## Configure the local key protector and vTPM
+
+~~~powershell
+Set-VMKeyProtector -VMName "CLIENT01" -NewLocalKeyProtector
+Enable-VMTPM -VMName "CLIENT01"
+~~~
+
+Inspect:
+
+~~~powershell
+Get-VMSecurity -VMName "CLIENT01"
+~~~
+
+## Troubleshoot Windows 11 requirement failures
+
+If Windows Setup reports that the VM does not meet requirements, validate the VM rather than immediately looking for a bypass:
+
+~~~powershell
+Get-VM CLIENT01
+Get-VMProcessor CLIENT01
+Get-VMMemory CLIENT01
+Get-VMHardDiskDrive CLIENT01
+Get-VMFirmware CLIENT01
+Get-VMSecurity CLIENT01
+~~~
+
+Check:
+
+1. Generation 2;
+2. two or more vCPUs;
+3. 4 GB or more RAM;
+4. 64 GB or larger boot disk;
+5. Secure Boot;
+6. local key protector;
+7. vTPM;
+8. supported Windows 11 media;
+9. underlying processor support.
+
+Inside an installed Windows 11 guest:
+
+~~~powershell
+Get-Tpm
+~~~
+
+The course intentionally does not teach Windows 11 requirement-bypass registry modifications. Correct virtual-hardware configuration is the learning objective.
+
+Microsoft references:
+
+- https://learn.microsoft.com/windows/whats-new/windows-11-requirements
+- https://learn.microsoft.com/windows-server/virtualization/hyper-v/generation-2-virtual-machine-security-features
+- https://learn.microsoft.com/powershell/module/hyper-v/enable-vmtpm
+- https://learn.microsoft.com/powershell/module/hyper-v/set-vmkeyprotector
+
+---
+
 # Module 10 — Operational comparison with other hypervisors
 
 The goal is not to teach another virtualization platform, but to help administrators map familiar concepts.
