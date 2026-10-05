@@ -5,6 +5,7 @@
 This checklist is the handoff from Windows Server fundamentals into Hyper-V. Each item represents a dependency used directly on Day 2, so unresolved gaps should be fixed now rather than carried forward.
 
 - [ ] PowerShell fundamentals demonstrated.
+- [ ] Hyper-V PowerShell primer completed on the physical host using read-only inspection commands.
 - [ ] Windows Server architecture understood.
 - [ ] Roles/features explored.
 - [ ] Administration tools compared.
