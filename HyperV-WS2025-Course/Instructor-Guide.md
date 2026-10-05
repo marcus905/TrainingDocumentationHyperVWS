@@ -58,6 +58,18 @@ Common failures:
 - VPN/network software interfering with virtual networking.
 
 ## Day 1 notes
+
+### PowerShell progression
+
+Day 1 now contains two related primers:
+
+1. **General PowerShell essentials** on HV01 — objects, pipeline, discovery, help, filtering and safe administration.
+2. **Hyper-V PowerShell orientation** on the physical Windows 11 host — read-only inspection of HV01/HV02 using the Hyper-V module.
+
+The Hyper-V orientation must remain read-only unless specifically directed. The reason for running it on the physical host is that Hyper-V is not installed inside HV01 until Day 2.
+
+On Day 2, explicitly reconnect the primer to the nested host by showing that the same `Get-VM`, `Get-VMProcessor`, `Get-VMMemory`, `Get-VMNetworkAdapter`, `Get-VMHardDiskDrive` and `Get-VMFirmware` cmdlets now operate inside HV01.
+
 Teach networking as separate layers:
 ~~~text
 Link
@@ -74,6 +86,26 @@ Have students configure invalid DNS themselves, then troubleshoot from the sympt
 - Resolve-DnsName isolates the problem.
 
 ## Day 2 notes
+
+### Optional Windows 11 CLIENT01 / TPM
+
+CLIENT01 remains optional because it increases nested-memory pressure.
+
+If the optional Windows 11 client is used, configure the supported prerequisites before installation:
+
+- Generation 2;
+- Secure Boot enabled;
+- vTPM enabled;
+- 2+ vCPUs;
+- 4 GB+ RAM;
+- 64 GB+ boot disk.
+
+Use a local key protector plus `Enable-VMTPM` on the standalone training host.
+
+A useful teaching point is that Hyper-V emulates the guest vTPM independently of the host TPM presence/version. If Windows 11 Setup reports a TPM failure, inspect the VM security configuration before blaming the physical TPM.
+
+Do not teach Windows 11 setup-check bypasses. The objective is correct virtual-hardware/security configuration.
+
 ### External switch warning
 Remote students can disconnect themselves by changing the wrong NIC. Prefer instructor demonstration for External switches and student use of Internal/NAT networking.
 
@@ -168,6 +200,90 @@ Use mappings only as a bridge. Explain architectural differences rather than pre
 - repeatability;
 - PowerShell use;
 - separation of remediation and prevention.
+
+
+
+## Student module/file alignment
+
+Use these filenames when directing students during class or mapping future slide sections.
+
+### Day 0
+
+- `Day-0/01-Host-Prerequisites.md`
+- `Day-0/02-Course-Folders-and-Media.md`
+- `Day-0/03-Outer-NAT-Network.md`
+- `Day-0/04-Create-HV01-HV02.md`
+- `Day-0/05-Install-and-Configure-Hosts.md`
+- `Day-0/06-Nested-Virtualization.md`
+- `Day-0/99-Readiness-Check.md`
+
+### Day 1
+
+- `Day-1/01-PowerShell-Essentials.md`
+- `Day-1/02-Hyper-V-PowerShell-Primer.md`
+- `Day-1/03-Architecture-and-WS2025.md`
+- `Day-1/04-Initial-Configuration.md`
+- `Day-1/05-Roles-Features-and-Tools.md`
+- `Day-1/06-Networking.md`
+- `Day-1/07-Local-Storage.md`
+- `Day-1/08-Stage-Installation-Media.md`
+- `Day-1/09-Break-Fix-DNS.md`
+- `Day-1/99-Day-1-Check.md`
+
+### Day 2
+
+- `Day-2/01-Architecture.md`
+- `Day-2/02-Install-Hyper-V.md`
+- `Day-2/03-Management-Tools.md`
+- `Day-2/04-VM-Resources-and-Storage.md`
+- `Day-2/05-Virtual-Networking.md`
+- `Day-2/06-Create-SRV01.md`
+- `Day-2/07-Guest-Install-and-Network.md`
+- `Day-2/08-Create-DC01.md`
+- `Day-2/09-Break-Fix-Network.md`
+- `Day-2/10-Optional-Windows-11-CLIENT01.md`
+- `Day-2/99-Day-2-Check.md`
+
+### Day 3
+
+- `Day-3/01-Checkpoints-and-Integration-Services.md`
+- `Day-3/02-Recovery-Concepts.md`
+- `Day-3/03-Prepare-HV02.md`
+- `Day-3/04-Replica-Authentication.md`
+- `Day-3/05-Enable-Replica.md`
+- `Day-3/06-Replica-Failover.md`
+- `Day-3/07-HA-and-Storage.md`
+- `Day-3/08-Performance-and-Tuning.md`
+- `Day-3/09-Bare-Metal-and-PXE.md`
+- `Day-3/10-Break-Fix-Replica.md`
+- `Day-3/99-Day-3-Check.md`
+
+### Day 4
+
+- `Day-4/01-Troubleshooting-Method.md`
+- `Day-4/02-Events-and-Evidence.md`
+- `Day-4/03-Performance-Tools.md`
+- `Day-4/04-CPU-and-Memory.md`
+- `Day-4/05-Storage.md`
+- `Day-4/06-Network.md`
+- `Day-4/07-Management-and-Checkpoints.md`
+- `Day-4/08-Security-and-Patterns.md`
+- `Day-4/09-EOD-Incident-Drill.md`
+- `Day-4/99-Day-4-Check.md`
+
+### Day 5
+
+- `Day-5/01-Advanced-Troubleshooting.md`
+- `Day-5/02-VMware-to-HyperV.md`
+- `Day-5/03-Migration-Planning.md`
+- `Day-5/04-Migration-Technologies.md`
+- `Day-5/05-Operations-and-Inventory.md`
+- `Day-5/06-Security-Baseline.md`
+- `Day-5/07-Operational-Readiness.md`
+- `Day-5/08-Final-Capstone.md`
+- `Day-5/99-Course-Wrap-Up.md`
+
+The Day README files are the student navigation pages. The root Day 0–5 files remain the canonical technical guides.
 
 ## Reference policy
 Use Microsoft Learn as primary source.
