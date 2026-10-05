@@ -23,7 +23,8 @@ Follow the sequence in order so the nested network exists before guests are crea
 7. [Guest install and connectivity](07-Guest-Install-and-Network.md)
 8. [Create DC01](08-Create-DC01.md)
 9. [Break/Fix — network](09-Break-Fix-Network.md)
-10. [Day 2 check](99-Day-2-Check.md)
+10. [Optional Windows 11 CLIENT01 and vTPM readiness](10-Optional-Windows-11-CLIENT01.md)
+11. [Day 2 check](99-Day-2-Check.md)
 
 ## What you should observe
 
