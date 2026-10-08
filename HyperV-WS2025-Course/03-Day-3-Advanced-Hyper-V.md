@@ -144,14 +144,14 @@ Set-VM -Name "SRV01" -CheckpointType Production
 Get-VM SRV01 | Select-Object Name,CheckpointType
 ~~~
 
-## Step 2 — Record the current disk chain
+## Step 3 — Record the current disk chain
 
 ~~~powershell
 Get-VMHardDiskDrive SRV01
 Get-ChildItem "D:\Hyper-V\VHDX" | Select-Object Name,Length,LastWriteTime
 ~~~
 
-## Step 3 — Create the checkpoint
+## Step 4 — Create the checkpoint
 
 ~~~powershell
 Checkpoint-VM -VMName "SRV01" -SnapshotName "Pre-Application-Change"
@@ -166,7 +166,7 @@ Get-ChildItem "D:\Hyper-V\VHDX" | Select-Object Name,Length,LastWriteTime
 
 Look for AVHDX files.
 
-## Step 4 — Make a controlled guest change
+## Step 5 — Make a controlled guest change
 
 Inside SRV01:
 
@@ -177,7 +177,7 @@ New-Item -ItemType Directory -Path "C:\Lab" -Force
 
 Confirm that C:\Lab\Checkpoint-Test.txt exists.
 
-## Step 5 — Restore the checkpoint
+## Step 6 — Restore the checkpoint
 
 ~~~powershell
 Restore-VMSnapshot -VMName "SRV01" -Name "Pre-Application-Change" -Confirm:$false
@@ -185,7 +185,7 @@ Restore-VMSnapshot -VMName "SRV01" -Name "Pre-Application-Change" -Confirm:$fals
 
 Start SRV01 if required and verify that the post-checkpoint change has been rolled back.
 
-## Step 6 — Remove the checkpoint
+## Step 7 — Remove the checkpoint
 
 ~~~powershell
 Remove-VMSnapshot -VMName "SRV01" -Name "Pre-Application-Change"
@@ -572,9 +572,77 @@ hv01.lab.local
 hv02.lab.local
 ~~~
 
-## Step 1 — Add deterministic host-name mappings
+## Step 1 — Set the primary DNS suffix on HV01 and HV02
 
-On HV01, open an elevated PowerShell session:
+The certificate names used in this lab are:
+
+~~~text
+hv01.lab.local
+hv02.lab.local
+~~~
+
+A hosts-file entry can provide name resolution, but it does **not** change the Windows server's own fully qualified computer name.
+
+Before creating the Replica certificates, configure the primary DNS suffix so each host's Windows FQDN matches the certificate identity.
+
+On **HV01** and **HV02**:
+
+1. Run `sysdm.cpl`.
+2. Open the **Computer Name** tab.
+3. Select **Change**.
+4. Select **More**.
+5. Set **Primary DNS suffix of this computer** to:
+
+~~~text
+lab.local
+~~~
+
+6. Confirm the dialogs.
+7. Restart if prompted.
+
+Expected configuration:
+
+### HV01
+
+~~~text
+Computer name:       HV01
+Primary DNS suffix:  lab.local
+Full computer name:  hv01.lab.local
+Membership:          WORKGROUP
+~~~
+
+### HV02
+
+~~~text
+Computer name:       HV02
+Primary DNS suffix:  lab.local
+Full computer name:  hv02.lab.local
+Membership:          WORKGROUP
+~~~
+
+The servers remain workgroup members. Setting a primary DNS suffix does not join Active Directory.
+
+After restart, verify the **Full computer name** on the Computer Name tab.
+
+You can also review the DNS suffix in:
+
+~~~powershell
+ipconfig /all
+~~~
+
+Look for:
+
+~~~text
+Primary Dns Suffix
+~~~
+
+Do not continue with certificate creation until the local FQDNs match the certificate names.
+
+## Step 2 — Add deterministic host-name mappings
+
+The lab does not host a DNS zone for `lab.local`, so use the local hosts file to resolve the peer FQDN.
+
+On HV01:
 
 ~~~powershell
 Add-Content -Path "$env:SystemRoot\System32\drivers\etc\hosts" -Value "192.168.240.12 hv02.lab.local"
@@ -586,16 +654,27 @@ On HV02:
 Add-Content -Path "$env:SystemRoot\System32\drivers\etc\hosts" -Value "192.168.240.11 hv01.lab.local"
 ~~~
 
-Verify:
+Validate through the normal Windows name-resolution path.
+
+From HV01:
 
 ~~~powershell
-Resolve-DnsName hv01.lab.local
-Resolve-DnsName hv02.lab.local
+Test-Connection hv02.lab.local -Count 2
+Test-NetConnection hv02.lab.local
 ~~~
 
-Each host only needs to resolve the peer correctly.
+From HV02:
 
-## Step 2 — Create lab certificates on the physical Windows 11 host
+~~~powershell
+Test-Connection hv01.lab.local -Count 2
+Test-NetConnection hv01.lab.local
+~~~
+
+> **Name-resolution note**
+>
+> Use `Test-Connection` / `Test-NetConnection` to validate hosts-file mappings. `Resolve-DnsName` is most useful when validating actual DNS records and should not be used as the only proof of a hosts-file mapping.
+
+## Step 3 — Create lab certificates on the physical Windows 11 host
 
 On the physical Windows 11 host, create a folder:
 
@@ -673,7 +752,7 @@ $PfxPassword = Read-Host "Enter the lab PFX password" -AsSecureString
 Import-PfxCertificate -FilePath "C:\ReplicaCerts\HV01-Replica.pfx" -CertStoreLocation "Cert:\LocalMachine\My" -Password $PfxPassword
 ~~~
 
-## Step 7 — Import the root and host certificate on HV02
+## Step 8 — Import the root and host certificate on HV02
 
 On HV02:
 
@@ -683,7 +762,7 @@ $PfxPassword = Read-Host "Enter the lab PFX password" -AsSecureString
 Import-PfxCertificate -FilePath "C:\ReplicaCerts\HV02-Replica.pfx" -CertStoreLocation "Cert:\LocalMachine\My" -Password $PfxPassword
 ~~~
 
-## Step 8 — Verify certificate properties
+## Step 9 — Verify certificate properties
 
 On each host:
 
@@ -708,7 +787,7 @@ HV01 certificate thumbprint: ______________________________
 HV02 certificate thumbprint: ______________________________
 ~~~
 
-## Step 9 — Disable certificate revocation checking for this isolated lab
+## Step 10 — Disable certificate revocation checking for this isolated lab
 
 Hyper-V Replica performs certificate revocation checking.
 
