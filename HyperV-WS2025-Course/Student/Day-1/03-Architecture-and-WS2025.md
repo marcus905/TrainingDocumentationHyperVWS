@@ -1,4 +1,4 @@
-# Module 02 — Architecture and Windows Server 2025
+# Module 03 — Architecture and Windows Server 2025
 
 ## Introduction
 
