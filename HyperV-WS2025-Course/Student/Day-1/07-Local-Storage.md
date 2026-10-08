@@ -1,4 +1,4 @@
-# Module 06 — Local Storage
+# Module 07 — Local Storage
 
 ## Introduction
 
