@@ -1,4 +1,4 @@
-# Module 07 — Stage Installation Media
+# Module 08 — Stage Installation Media
 
 ## Introduction
 
