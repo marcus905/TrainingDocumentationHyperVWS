@@ -1101,6 +1101,143 @@ This course introduces the architecture but does not build a complete production
 
 ---
 
+# Mini-Lab 3.HA — Assess Hyper-V high-availability readiness
+
+## Objective
+
+Turn the HA architecture discussion into a small hands-on assessment without building an unsupported nested failover cluster.
+
+> **Important lab boundary**
+>
+> Microsoft documents that nested virtualization is useful for test/evaluation scenarios but is **not suitable for Windows Server Failover Clustering**. This exercise therefore stops at feature installation, inspection and requirement analysis. Do not run `New-Cluster` in the course lab.
+
+Microsoft reference:
+
+https://learn.microsoft.com/windows-server/virtualization/hyper-v/nested-virtualization
+
+## Step 1 — Install the Failover Clustering feature for inspection
+
+On HV01 and HV02:
+
+~~~powershell
+Install-WindowsFeature Failover-Clustering -IncludeManagementTools
+~~~
+
+Verify:
+
+~~~powershell
+Get-WindowsFeature Failover-Clustering
+Get-Command -Module FailoverClusters | Select-Object -First 10 Name
+~~~
+
+Installing the feature does not create a cluster.
+
+## Step 2 — Verify node identity
+
+On HV01 and HV02:
+
+~~~powershell
+hostname.exe
+ipconfig /all
+~~~
+
+Confirm:
+
+~~~text
+HV01 -> hv01.lab.local
+HV02 -> hv02.lab.local
+Membership -> WORKGROUP
+~~~
+
+## Step 3 — Verify node-to-node management connectivity
+
+From HV01:
+
+~~~powershell
+Test-Connection hv02.lab.local -Count 2
+~~~
+
+From HV02:
+
+~~~powershell
+Test-Connection hv01.lab.local -Count 2
+~~~
+
+Record whether name resolution and ICMP reachability are healthy.
+
+## Step 4 — Compare Hyper-V configuration
+
+On each node:
+
+~~~powershell
+Get-VMHost | Select-Object VirtualMachinePath,VirtualHardDiskPath,LogicalProcessorCount
+Get-VMSwitch | Select-Object Name,SwitchType
+~~~
+
+Questions:
+
+- Do both hosts use consistent VM and VHDX folder conventions?
+- Does the required workload switch name exist on both nodes?
+- Are the hosts comparable enough that a workload could be configured consistently?
+
+## Step 5 — Inspect the storage model
+
+On both nodes:
+
+~~~powershell
+Get-Disk
+Get-Volume
+~~~
+
+Compare the D: volumes.
+
+Although both hosts use a path named `D:\Hyper-V`, they are **different local virtual disks**. Matching drive letters and folder names do not make storage shared.
+
+For a highly available Hyper-V VM, production designs require storage/state that the participating nodes can access in a supported coordinated design, such as CSV/shared block storage, SMB 3, or an appropriate Storage Spaces Direct design.
+
+## Step 6 — Build the readiness matrix
+
+Complete this table:
+
+| HA requirement | Current course lab | Production-ready? |
+|---|---|---|
+| Two Hyper-V hosts | HV01 + HV02 | Partial |
+| Stable host FQDNs | hv01.lab.local / hv02.lab.local | Yes for lab identity |
+| Failover Clustering feature | Installed for inspection | Feature only |
+| Node connectivity | Outer 192.168.240.0/24 management network | Lab-level |
+| Consistent vSwitch naming | vSW-Lab on both hosts | Yes for course convention |
+| Shared/coordinated VM storage | Separate local D: disks | **No** |
+| Quorum/witness design | Not configured | **No** |
+| Full cluster validation | Not performed | **No** |
+| Suitable underlying virtualization | Nested Hyper-V | **No for WSFC lab design** |
+
+## Step 7 — State what would be required for true HA
+
+Your short report should identify at least:
+
+- a supported non-nested/production platform;
+- a supported shared or coordinated storage design;
+- cluster validation;
+- quorum/witness planning;
+- production network design;
+- operational ownership/monitoring;
+- how clustered VMs would be made highly available.
+
+## Expected conclusion
+
+HV01 and HV02 demonstrate several **prerequisites and concepts** of HA, but the current course topology deliberately remains a Replica/standalone-host design rather than a supported failover cluster.
+
+## Validation checkpoint
+
+- [ ] Failover Clustering feature inspected on both hosts.
+- [ ] FQDNs verified.
+- [ ] Host-to-host connectivity verified.
+- [ ] Hyper-V configuration compared.
+- [ ] Local storage correctly identified as nonshared.
+- [ ] Missing HA requirements documented.
+- [ ] Student can explain why Replica and Failover Clustering solve different problems.
+
+---
 ## Live Migration, Storage Migration and Replica
 
 These technologies are often grouped together because they all involve VM movement, but they solve different problems.
@@ -1650,6 +1787,8 @@ Students should be able to answer:
 - [ ] Basic evidence-driven tuning method understood.
 - [ ] Integration Services inspected.
 - [ ] Live Migration, Storage Migration and Replica differences understood.
+- [ ] HA readiness mini-lab completed.
+- [ ] Nested virtualization limitation for Windows Server Failover Clustering understood.
 - [ ] Bare-metal/PXE deployment flow understood.
 - [ ] Current WDS direction/deprecation discussed.
 - [ ] Replica break/fix exercise completed using evidence.
