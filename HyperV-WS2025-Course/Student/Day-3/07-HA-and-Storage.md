@@ -117,6 +117,104 @@ Your answer should mention supported infrastructure, shared/coordinated storage,
 
 Do **not** run `New-Cluster` in this course environment.
 
+## Future lab reference — supported workgroup-cluster progression
+
+> **Reference only for a future supported lab. Do not run this sequence on the current nested HV01/HV02 course machines.**
+
+When you later have two supported non-nested Windows Server 2025 Hyper-V hosts plus supported shared/coordinated storage, use this progression as a starting baseline.
+
+### 1. Prepare workgroup-cluster identity and trust
+
+- same Windows Server version;
+- both nodes in WORKGROUP;
+- common primary DNS suffix;
+- working forward name resolution;
+- same local administrator username/password on both nodes;
+- appropriate WinRM TrustedHosts configuration.
+
+Microsoft also documents `LocalAccountTokenFilterPolicy` when a nonbuilt-in local administrator is used for remote administration.
+
+### 2. Install Failover Clustering
+
+~~~powershell
+Install-WindowsFeature Failover-Clustering -IncludeManagementTools
+~~~
+
+### 3. Provide supported shared/coordinated storage
+
+Use SAN/shared block, SMB 3, or Storage Spaces Direct when its hardware requirements are met.
+
+The current course's separate local D: disks are not sufficient.
+
+### 4. Validate the future hosts
+
+~~~powershell
+Test-Cluster -Node hv01.lab.local,hv02.lab.local
+~~~
+
+Review the validation report before cluster creation.
+
+### 5. Create the workgroup cluster
+
+Example baseline:
+
+~~~powershell
+$Cred1 = Get-Credential -UserName "HV01\ClusterAdmin"
+$Cred2 = Get-Credential -UserName "HV02\ClusterAdmin"
+
+New-WorkgroupCluster `
+    -Name "HVCL01" `
+    -Node "hv01.lab.local","hv02.lab.local" `
+    -Credentials $Cred1,$Cred2 `
+    -StaticAddress "<cluster-management-IP>" `
+    -NoStorage
+~~~
+
+### 6. Verify cluster state
+
+~~~powershell
+Get-Cluster
+Get-ClusterNode
+Get-ClusterNetwork
+Get-ClusterQuorum
+~~~
+
+### 7. Configure a witness
+
+A two-node cluster should have a witness appropriate to the design. Use a supported cloud, disk, or file-share witness and verify with:
+
+~~~powershell
+Get-ClusterQuorum
+~~~
+
+### 8. Add shared storage / CSV where appropriate
+
+~~~powershell
+Get-ClusterAvailableDisk
+Add-ClusterDisk -Name "<Available Cluster Disk Name>"
+Add-ClusterSharedVolume -Name "<Cluster Disk Name>"
+Get-ClusterSharedVolume
+~~~
+
+### 9. Put the VM on cluster-accessible storage
+
+For CSV-backed storage, VM files normally live below a path such as:
+
+~~~text
+C:\ClusterStorage\Volume1\VMs\SRV01
+~~~
+
+### 10. Make the VM highly available
+
+~~~powershell
+Add-ClusterVirtualMachineRole -VMName "SRV01"
+~~~
+
+Then verify clustered roles/resources and perform controlled movement/failover testing only after the future cluster has passed validation.
+
+### Why this stays reference-only today
+
+The current course topology lacks the supported physical/non-nested platform, shared/coordinated VM storage, quorum/witness design, full cluster validation, and cluster management configuration required for a real HA implementation.
 ## What you should observe
 
 A technology can solve one problem while leaving another untouched: for example, Live Migration does not create a DR copy and local storage does not provide clustered resiliency.
