@@ -1,4 +1,4 @@
-# Module 05 — Basic Networking
+# Module 06 — Basic Networking
 
 ## Introduction
 
