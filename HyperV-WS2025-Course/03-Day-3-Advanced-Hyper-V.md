@@ -1238,6 +1238,215 @@ HV01 and HV02 demonstrate several **prerequisites and concepts** of HA, but the 
 - [ ] Student can explain why Replica and Failover Clustering solve different problems.
 
 ---
+## Future supported lab baseline — command progression
+
+> **Do not run the following build sequence on HV01/HV02 in the current course lab.**
+>
+> This section is a reusable baseline for a later lab built on supported, non-nested Windows Server 2025 hosts with appropriate shared/coordinated storage and networking.
+
+Windows Server 2025 supports Hyper-V virtual machines on workgroup failover clusters. A supported workgroup-cluster build has additional prerequisites that the current nested course topology deliberately does not satisfy.
+
+### Phase 1 — Prepare both future cluster nodes
+
+Use the same Windows Server version on both hosts and keep the nodes in a workgroup.
+
+Configure the same primary DNS suffix on both nodes and ensure forward name resolution works for both node FQDNs.
+
+For a workgroup cluster, create the same local administrator account with the same password on both nodes.
+
+Example placeholder:
+
+~~~powershell
+$Password = Read-Host "Enter the cluster-lab local admin password" -AsSecureString
+New-LocalUser -Name "ClusterAdmin" -Password $Password
+Add-LocalGroupMember -Group "Administrators" -Member "ClusterAdmin"
+~~~
+
+If a nonbuilt-in local administrator account is used for remote administration, Microsoft documents setting LocalAccountTokenFilterPolicy:
+
+~~~powershell
+New-ItemProperty `
+    -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" `
+    -Name "LocalAccountTokenFilterPolicy" `
+    -PropertyType DWord `
+    -Value 1 `
+    -Force
+~~~
+
+Configure WinRM TrustedHosts so each node trusts the peer:
+
+~~~powershell
+Set-Item WSMan:\localhost\Client\TrustedHosts -Value "hv01.lab.local,hv02.lab.local"
+~~~
+
+Review rather than overwrite an existing TrustedHosts configuration in a real environment.
+
+### Phase 2 — Install Failover Clustering
+
+On both future nodes:
+
+~~~powershell
+Install-WindowsFeature -Name Failover-Clustering -IncludeManagementTools
+Get-WindowsFeature -Name Failover-Clustering
+~~~
+
+### Phase 3 — Provide supported shared/coordinated storage
+
+Before creating a highly available Hyper-V workload, provide storage that is available to the participating nodes in a supported design.
+
+Examples include:
+
+- SAN/shared block storage;
+- SMB 3 storage;
+- Storage Spaces Direct where its hardware and topology requirements are met.
+
+The current course hosts' separate local `D:` disks do **not** satisfy this requirement.
+
+### Phase 4 — Validate before cluster creation
+
+Run full cluster validation on the future supported hosts:
+
+~~~powershell
+Test-Cluster -Node hv01.lab.local,hv02.lab.local
+~~~
+
+Review the generated validation report.
+
+Do not proceed to cluster creation until the intended production design passes the required validation tests and any warnings are understood.
+
+### Phase 5 — Create the workgroup cluster
+
+Windows Server 2025 includes `New-WorkgroupCluster` for this scenario.
+
+Example:
+
+~~~powershell
+$Cred1 = Get-Credential -UserName "HV01\ClusterAdmin" -Message "Credential for HV01"
+$Cred2 = Get-Credential -UserName "HV02\ClusterAdmin" -Message "Credential for HV02"
+
+New-WorkgroupCluster `
+    -Name "HVCL01" `
+    -Node "hv01.lab.local","hv02.lab.local" `
+    -Credentials $Cred1,$Cred2 `
+    -StaticAddress "<cluster-management-IP>" `
+    -NoStorage
+~~~
+
+`-NoStorage` is used in this baseline so local disks are not automatically treated as cluster storage. Shared storage should be added deliberately according to the chosen design.
+
+Verify:
+
+~~~powershell
+Get-Cluster
+Get-ClusterNode
+Get-ClusterNetwork
+~~~
+
+### Phase 6 — Configure quorum/witness
+
+A two-node cluster should have a witness appropriate to the design.
+
+Inspect the current quorum configuration:
+
+~~~powershell
+Get-ClusterQuorum
+~~~
+
+Examples for a future environment include a cloud, disk, or file-share witness. Configure the witness type that matches the infrastructure and security model, then verify again with `Get-ClusterQuorum`.
+
+After changing quorum, rerun the relevant cluster validation tests.
+
+### Phase 7 — Add shared storage / CSV where applicable
+
+If the design uses cluster disks, identify available cluster disks:
+
+~~~powershell
+Get-ClusterAvailableDisk
+~~~
+
+Add the intended shared disk to the cluster, then convert the appropriate clustered disk to Cluster Shared Volume:
+
+~~~powershell
+Add-ClusterDisk -Name "<Available Cluster Disk Name>"
+Add-ClusterSharedVolume -Name "<Cluster Disk Name>"
+Get-ClusterSharedVolume
+~~~
+
+Do not substitute a node-local disk merely because both nodes use the same drive letter or folder name.
+
+### Phase 8 — Place the VM on cluster-accessible storage
+
+Before making a VM highly available, its VHDX/configuration must be located on storage that the cluster nodes can access in the supported design.
+
+For CSV-backed storage, a typical path might resemble:
+
+~~~text
+C:\ClusterStorage\Volume1\VMs\SRV01
+~~~
+
+The exact migration/copy procedure depends on the existing VM and chosen storage architecture.
+
+### Phase 9 — Make the VM highly available
+
+After the VM is correctly placed on cluster-accessible storage:
+
+~~~powershell
+Add-ClusterVirtualMachineRole -VMName "SRV01"
+~~~
+
+Verify:
+
+~~~powershell
+Get-ClusterGroup
+Get-ClusterResource
+~~~
+
+### Phase 10 — Test planned movement and failover
+
+Only after validation, quorum, shared storage, and the clustered VM role are healthy should you test workload movement/failover according to the future lab's maintenance plan.
+
+Document:
+
+- expected owner node;
+- workload connectivity during movement;
+- storage accessibility;
+- event/cluster logs;
+- recovery behavior;
+- rollback procedure.
+
+### What is missing in the current course lab?
+
+| Future cluster step | Current nested course lab |
+|---|---|
+| Same Windows Server version | Present |
+| Workgroup + common DNS suffix | Present |
+| Matching local admin / workgroup-cluster trust preparation | Not configured as cluster prerequisites |
+| Failover Clustering feature | Installed only for inspection |
+| Supported non-nested hosts | **Missing** |
+| Supported shared/coordinated storage | **Missing** |
+| Full cluster validation | Intentionally not run as a production qualification |
+| Cluster management IP/name | Not allocated |
+| Quorum/witness | Not configured |
+| CSV/shared VM placement | Not configured |
+| Clustered VM role | Not created |
+
+This progression is therefore a **future lab baseline**, not permission to turn the current nested training environment into a cluster.
+
+Microsoft references:
+
+https://learn.microsoft.com/windows-server/failover-clustering/create-workgroup-cluster
+
+https://learn.microsoft.com/powershell/module/failoverclusters/new-workgroupcluster?view=windowsserver2025-ps
+
+https://learn.microsoft.com/windows-server/failover-clustering/create-failover-cluster
+
+https://learn.microsoft.com/windows-server/failover-clustering/what-is-quorum-witness
+
+https://learn.microsoft.com/powershell/module/failoverclusters/add-clustersharedvolume?view=windowsserver2025-ps
+
+https://learn.microsoft.com/powershell/module/failoverclusters/add-clustervirtualmachinerole?view=windowsserver2025-ps
+
+---
 ## Live Migration, Storage Migration and Replica
 
 These technologies are often grouped together because they all involve VM movement, but they solve different problems.
