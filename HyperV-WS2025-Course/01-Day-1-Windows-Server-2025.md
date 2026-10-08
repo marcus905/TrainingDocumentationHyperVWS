@@ -1530,6 +1530,60 @@ Students should record their final configuration.
 
 ---
 
+## Optional diagnostic configuration — ICMP Echo Request
+
+Allowing ICMP Echo Request can make basic management-path diagnostics easier during the course.
+
+Ping is only one signal. A successful ping does not prove DNS, WinRM, HTTPS, Replica, or an application service is healthy.
+
+### SConfig method
+
+Run:
+
+~~~powershell
+SConfig
+~~~
+
+Then:
+
+1. Select **4 — Configure remote management**.
+2. Select **3 — Enable server response to ping**.
+
+Microsoft reference:
+
+https://learn.microsoft.com/windows-server/windows-server-2022/get-started/sconfig-on-ws2022
+
+### PowerShell method — scoped to the outer course network
+
+~~~powershell
+New-NetFirewallRule `
+    -DisplayName "HyperV Course - ICMPv4 Echo Request" `
+    -Direction Inbound `
+    -Action Allow `
+    -Protocol ICMPv4 `
+    -IcmpType 8 `
+    -RemoteAddress 192.168.240.0/24
+~~~
+
+Verify:
+
+~~~powershell
+Get-NetFirewallRule -DisplayName "HyperV Course - ICMPv4 Echo Request"
+~~~
+
+Test the management path:
+
+~~~powershell
+Test-Connection 192.168.240.12 -Count 2
+~~~
+
+From HV02, use 192.168.240.11 as the target.
+
+### Teaching point
+
+The SConfig method is convenient and exposes a standard Windows Server management workflow. The PowerShell method makes the firewall rule explicit and scopes it to the lab management subnet.
+
+---
 # Module 5 — Local storage
 
 ## Concepts
