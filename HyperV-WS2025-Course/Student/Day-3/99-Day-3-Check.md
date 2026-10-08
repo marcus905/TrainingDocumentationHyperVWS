@@ -11,11 +11,14 @@ Day 3 adds the most dependencies of the course so far: a second Hyper-V host, ce
 - [ ] HV02 data disk initialized.
 - [ ] Hyper-V installed on HV02.
 - [ ] Recovery-side vSW-Lab/LabNAT created.
+- [ ] Primary DNS suffix `lab.local` configured on HV01/HV02; FQDNs verified.
+- [ ] Peer hosts-file mappings validated through Test-Connection/Test-NetConnection.
 - [ ] Lab root and host Replica certificates created/imported.
 - [ ] HTTPS Replica enabled.
 - [ ] SRV01 initial replication completed.
 - [ ] Test Failover practiced.
 - [ ] HA/storage architectures discussed.
+- [ ] HA readiness mini-lab completed; current nested topology correctly identified as non-production/non-WSFC-suitable.
 - [ ] Performance baseline recorded.
 - [ ] Replica break/fix completed.
 - [ ] Environment returned to baseline.
