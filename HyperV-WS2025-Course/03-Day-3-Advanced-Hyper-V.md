@@ -311,6 +311,52 @@ Import-VM -Path "<VM configuration path>" -Copy -GenerateNewId
 
 Do not run the imported copy simultaneously on the same network with conflicting guest identity/IP settings.
 
+## Restore to explicit locations
+
+When importing with `-Copy`, Hyper-V can place the restored VM configuration and virtual disks in locations that you choose rather than only using the host defaults.
+
+Example:
+
+~~~powershell
+Import-VM `
+    -Path "<VM configuration path>" `
+    -Copy `
+    -GenerateNewId `
+    -VhdDestinationPath "D:\Hyper-V\VHDX\SRV01-Restore" `
+    -VirtualMachinePath "D:\Hyper-V\VMs\SRV01-Restore"
+~~~
+
+### `-VhdDestinationPath`
+
+This specifies the folder where Hyper-V copies the restored VM's VHD/VHDX files.
+
+Use it when:
+
+- the original disk path does not exist on the recovery host;
+- you want restored disks separated from the original VM;
+- storage layout differs between source and recovery hosts;
+- you want to avoid placing restored disks in an unintended default location.
+
+### `-VirtualMachinePath`
+
+This specifies the folder where Hyper-V stores the imported VM configuration files.
+
+It is separate from `-VhdDestinationPath` because VM configuration/state files and virtual disks can be stored in different locations.
+
+### Why `-GenerateNewId` is included here
+
+When the original SRV01 still exists on the same host, a copied recovery VM needs a different VM identity. `-GenerateNewId` avoids a duplicate VM-ID conflict.
+
+### Important distinction
+
+`-VhdDestinationPath` and `-VirtualMachinePath` belong to the **Copy** import workflow. A register-in-place import does not copy the export into new locations.
+
+Microsoft references:
+
+https://learn.microsoft.com/powershell/module/hyper-v/import-vm?view=windowsserver2025-ps
+
+https://learn.microsoft.com/windows-server/virtualization/hyper-v/deploy/export-and-import-virtual-machines
+
 ## Recovery discussion
 
 A successful backup strategy is not proven until a restore is tested.
