@@ -702,7 +702,7 @@ $HV02Cert = New-SelfSignedCertificate -Type Custom -Subject "CN=hv02.lab.local" 
 
 The host certificates include both Server Authentication and Client Authentication EKUs.
 
-## Step 3 — Export the lab root and host certificates
+## Step 4 — Export the lab root and host certificates
 
 Use a temporary **lab-only** PFX password chosen by the student:
 
@@ -717,7 +717,7 @@ Export-PfxCertificate -Cert $HV02Cert -FilePath "C:\HyperV-Course\ReplicaCerts\H
 
 Do not reuse a production password.
 
-## Step 4 — Enable Guest Service Interface for HV01 and HV02
+## Step 5 — Enable Guest Service Interface for HV01 and HV02
 
 Still on the physical Windows 11 host:
 
@@ -726,7 +726,7 @@ Enable-VMIntegrationService -VMName "HV01" -Name "Guest Service Interface"
 Enable-VMIntegrationService -VMName "HV02" -Name "Guest Service Interface"
 ~~~
 
-## Step 5 — Copy certificates into the outer hosts
+## Step 6 — Copy certificates into the outer hosts
 
 Copy the root and HV01 PFX into HV01:
 
@@ -742,7 +742,7 @@ Copy-VMFile -Name "HV02" -SourcePath "C:\HyperV-Course\ReplicaCerts\HyperV-Cours
 Copy-VMFile -Name "HV02" -SourcePath "C:\HyperV-Course\ReplicaCerts\HV02-Replica.pfx" -DestinationPath "C:\ReplicaCerts\HV02-Replica.pfx" -FileSource Host -CreateFullPath
 ~~~
 
-## Step 6 — Import the root and host certificate on HV01
+## Step 7 — Import the root and host certificate on HV01
 
 On HV01:
 
