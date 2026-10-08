@@ -133,6 +133,27 @@ Required message: **Checkpoints are state-management tools, not backups.**
 
 Show AVHDX creation and merge behavior.
 
+### HA readiness mini-lab
+
+Day 3 now includes a small Failover Clustering readiness exercise.
+
+Students may install `Failover-Clustering -IncludeManagementTools` on HV01/HV02 and inspect the module, node identity, networking, Hyper-V host configuration, and local storage.
+
+**Do not create a cluster.** Microsoft states that nested virtualization is not suitable for Windows Server Failover Clustering.
+
+The intended conclusion is that the course lab has:
+- two hosts;
+- consistent identities and switch conventions;
+- management connectivity;
+
+but lacks:
+- supported shared/coordinated VM storage;
+- quorum/witness design;
+- production network design;
+- full cluster validation;
+- a suitable non-nested platform for a real WSFC deployment.
+
+Use the gap analysis to reinforce the difference between Hyper-V Replica (DR) and Failover Clustering (HA).
 ### Replica
 Use Test Failover before disruptive recovery actions. Isolate test networking to avoid address conflicts.
 
