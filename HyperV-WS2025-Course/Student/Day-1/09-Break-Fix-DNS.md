@@ -1,4 +1,4 @@
-# Module 08 — Break/Fix: DNS
+# Module 09 — Break/Fix: DNS
 
 ## Introduction
 
