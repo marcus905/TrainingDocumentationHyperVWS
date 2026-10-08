@@ -70,6 +70,15 @@ The Hyper-V orientation must remain read-only unless specifically directed. The 
 
 On Day 2, explicitly reconnect the primer to the nested host by showing that the same `Get-VM`, `Get-VMProcessor`, `Get-VMMemory`, `Get-VMNetworkAdapter`, `Get-VMHardDiskDrive` and `Get-VMFirmware` cmdlets now operate inside HV01.
 
+### ICMP Echo Request
+
+Show both supported lab approaches:
+
+- SConfig -> 4 Configure remote management -> 3 Enable server response to ping;
+- PowerShell with a custom inbound ICMPv4 Echo Request rule scoped to 192.168.240.0/24.
+
+Use this to reinforce that ping is only basic path evidence. It does not validate DNS, HTTPS, WinRM, Replica, or another application protocol.
+
 Teach networking as separate layers:
 ~~~text
 Link
