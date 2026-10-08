@@ -37,6 +37,25 @@ Get-ChildItem "D:\Hyper-V\Export" -Recurse
 
 Discuss import choices: register in place, restore, or copy/new ID. A successful export does not prove recoverability until recovery is tested.
 
+### Restore to explicit locations
+
+A copied import can explicitly separate VM configuration files from restored virtual disks:
+
+~~~powershell
+Import-VM `
+    -Path "<VM configuration path>" `
+    -Copy `
+    -GenerateNewId `
+    -VhdDestinationPath "D:\Hyper-V\VHDX\SRV01-Restore" `
+    -VirtualMachinePath "D:\Hyper-V\VMs\SRV01-Restore"
+~~~
+
+- `-VhdDestinationPath` = where the restored VHD/VHDX files are copied.
+- `-VirtualMachinePath` = where the imported VM configuration files are stored.
+- `-GenerateNewId` = give the copied VM a new Hyper-V VM identity so it can coexist with the original in an isolated recovery exercise.
+
+These destination switches are part of the `-Copy` workflow. They are useful when the recovery host uses different storage paths or when you want to keep recovery files isolated from the source VM.
+
 ## What you should observe
 
 An export contains VM configuration and disks, but it does not by itself prove that recovery objectives, retention, or application consistency are met.
