@@ -31,7 +31,7 @@ SRV01 replication becomes unhealthy and Replica connectivity fails.
 ~~~powershell
 Get-VMReplication SRV01
 Measure-VMReplication SRV01
-Resolve-DnsName hv02.lab.local
+Test-Connection hv02.lab.local -Count 2
 Test-NetConnection hv02.lab.local -Port 443
 ~~~
 
