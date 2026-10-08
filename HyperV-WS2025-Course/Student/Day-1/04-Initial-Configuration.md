@@ -1,4 +1,4 @@
-# Module 03 — Initial Server Configuration
+# Module 04 — Initial Server Configuration
 
 ## Introduction
 
