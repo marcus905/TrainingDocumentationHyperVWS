@@ -20,9 +20,37 @@ Create the lab root and host certificates on the physical workstation, export/co
 
 Production environments should use an organizational trusted PKI. This course uses an isolated lab-only root CA.
 
+## Set the primary DNS suffix before certificate creation
+
+The certificate names used in this lab are `hv01.lab.local` and `hv02.lab.local`. A hosts-file entry can resolve those names, but it does not change the local server's own Windows FQDN.
+
+On **both HV01 and HV02**:
+
+1. Run `sysdm.cpl`.
+2. Open **Computer Name**.
+3. Select **Change**.
+4. Select **More**.
+5. Set **Primary DNS suffix of this computer** to `lab.local`.
+6. Confirm and restart if prompted.
+
+Expected:
+
+~~~text
+HV01 -> hv01.lab.local
+HV02 -> hv02.lab.local
+Membership -> WORKGROUP
+~~~
+
+Verify the Full computer name in System Properties and review `Primary Dns Suffix` with:
+
+~~~powershell
+ipconfig /all
+~~~
+
+Do not continue to certificate creation until the local FQDN matches the certificate identity.
 ## Name resolution
 
-HV01 must resolve hv02.lab.local to 192.168.240.12. HV02 must resolve hv01.lab.local to 192.168.240.11. Use hosts-file entries if required.
+HV01 must resolve hv02.lab.local to 192.168.240.12. HV02 must resolve hv01.lab.local to 192.168.240.11. Use hosts-file entries because this course does not host a lab.local DNS zone. Validate those mappings with `Test-Connection` or `Test-NetConnection`; use `Resolve-DnsName` when testing actual DNS records.
 
 ## Certificate workflow
 
@@ -62,7 +90,7 @@ Each host should trust the same lab root but hold only its own private host cert
 
 ## Validation checkpoint
 
-Verify name resolution, private key presence, expiry, Client/Server Authentication EKUs, trusted root, recorded thumbprints, and the lab-only revocation setting.
+Verify primary DNS suffix/FQDN, peer name resolution, private key presence, expiry, Client/Server Authentication EKUs, trusted root, recorded thumbprints, and the lab-only revocation setting.
 
 ## Expected end state
 
