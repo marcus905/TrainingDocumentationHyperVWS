@@ -154,6 +154,26 @@ but lacks:
 - a suitable non-nested platform for a real WSFC deployment.
 
 Use the gap analysis to reinforce the difference between Hyper-V Replica (DR) and Failover Clustering (HA).
+
+#### Future HA command baseline
+
+The student and canonical Day 3 material now also includes a **reference-only** workgroup-cluster command progression for a later supported lab.
+
+It covers:
+
+- matching local administrator/trust preparation;
+- Failover Clustering installation;
+- shared/coordinated storage prerequisite;
+- `Test-Cluster`;
+- `New-WorkgroupCluster`;
+- quorum/witness verification;
+- cluster disks / CSV;
+- VM placement on cluster-accessible storage;
+- `Add-ClusterVirtualMachineRole`.
+
+Keep the distinction explicit during delivery:
+
+> The command sequence is reusable after the course on suitable infrastructure, but students must **not** execute the cluster-creation portion on the current nested HV01/HV02 lab.
 ### Replica
 Use Test Failover before disruptive recovery actions. Isolate test networking to avoid address conflicts.
 
