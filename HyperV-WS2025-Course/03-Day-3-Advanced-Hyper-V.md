@@ -144,14 +144,14 @@ Set-VM -Name "SRV01" -CheckpointType Production
 Get-VM SRV01 | Select-Object Name,CheckpointType
 ~~~
 
-## Step 3 — Record the current disk chain
+## Step 2 — Record the current disk chain
 
 ~~~powershell
 Get-VMHardDiskDrive SRV01
 Get-ChildItem "D:\Hyper-V\VHDX" | Select-Object Name,Length,LastWriteTime
 ~~~
 
-## Step 4 — Create the checkpoint
+## Step 3 — Create the checkpoint
 
 ~~~powershell
 Checkpoint-VM -VMName "SRV01" -SnapshotName "Pre-Application-Change"
@@ -166,7 +166,7 @@ Get-ChildItem "D:\Hyper-V\VHDX" | Select-Object Name,Length,LastWriteTime
 
 Look for AVHDX files.
 
-## Step 5 — Make a controlled guest change
+## Step 4 — Make a controlled guest change
 
 Inside SRV01:
 
@@ -177,7 +177,7 @@ New-Item -ItemType Directory -Path "C:\Lab" -Force
 
 Confirm that C:\Lab\Checkpoint-Test.txt exists.
 
-## Step 6 — Restore the checkpoint
+## Step 5 — Restore the checkpoint
 
 ~~~powershell
 Restore-VMSnapshot -VMName "SRV01" -Name "Pre-Application-Change" -Confirm:$false
@@ -185,7 +185,7 @@ Restore-VMSnapshot -VMName "SRV01" -Name "Pre-Application-Change" -Confirm:$fals
 
 Start SRV01 if required and verify that the post-checkpoint change has been rolled back.
 
-## Step 7 — Remove the checkpoint
+## Step 6 — Remove the checkpoint
 
 ~~~powershell
 Remove-VMSnapshot -VMName "SRV01" -Name "Pre-Application-Change"
@@ -1678,7 +1678,7 @@ Measure-VMReplication SRV01
 ## Step 2 — Verify name resolution and network path
 
 ~~~powershell
-Resolve-DnsName hv02.lab.local
+Test-Connection hv02.lab.local -Count 2
 Test-NetConnection hv02.lab.local -Port 443
 ~~~
 
@@ -1772,6 +1772,8 @@ Students should be able to answer:
 - [ ] HV02 data disk initialized and Hyper-V storage paths created.
 - [ ] HV02 vSW-Lab and LabNAT created.
 - [ ] Standalone-host Replica authentication model understood.
+- [ ] HV01/HV02 primary DNS suffix set to lab.local and FQDNs verified.
+- [ ] Peer hosts-file name mappings validated with Test-Connection/Test-NetConnection.
 - [ ] Lab root and HV01/HV02 Replica certificates created and imported.
 - [ ] Lab-only certificate revocation setting configured on HV01 and HV02.
 - [ ] HV02 enabled as Replica server.
