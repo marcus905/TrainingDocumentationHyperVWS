@@ -137,11 +137,13 @@ Show AVHDX creation and merge behavior.
 Use Test Failover before disruptive recovery actions. Isolate test networking to avoid address conflicts.
 
 Before the Replica lab, verify that students have:
+- set the primary DNS suffix `lab.local` on HV01 and HV02 and restarted them;
+- confirmed the full computer names are `hv01.lab.local` and `hv02.lab.local` while membership remains WORKGROUP;
 - initialized HV02's D: data disk;
 - created the recovery-side vSW-Lab and LabNAT;
 - created/imported the lab root and host Replica certificates;
 - enabled the documented lab-only certificate revocation setting;
-- verified hv01.lab.local and hv02.lab.local name mappings.
+- verified peer hosts-file mappings with the normal Windows resolver path (`Test-Connection` / `Test-NetConnection`).
 
 Break/fix choices:
 - blocked HTTPS Replica firewall rule;
